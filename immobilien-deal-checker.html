@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="app-version" content="0.11.0" />
+  <title>Immobilien Deal Checker</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #131a2b;
+      --panel-2: #1a2238;
+      --text: #eef2ff;
+      --muted: #a7b0c8;
+      --line: #2b3552;
+      --good: #20c997;
+      --warn: #f59f00;
+      --bad: #fa5252;
+      --accent: #5c7cfa;
+      --shadow: 0 12px 32px rgba(0,0,0,.25);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(180deg, #0b1020 0%, #0f172a 100%);
+      color: var(--text);
+    }
+
+    .wrap {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.8rem, 2.8vw, 2.6rem);
+      line-height: 1.1;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      margin-bottom: 24px;
+      max-width: 980px;
+      line-height: 1.5;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 0 0 18px;
+    }
+
+    .meta-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.04);
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 460px 1fr;
+      gap: 22px;
+      align-items: start;
+    }
+
+    @media (max-width: 1080px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: rgba(19, 26, 43, 0.92);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      backdrop-filter: blur(8px);
+    }
+
+    .card h2 {
+      margin: 0;
+      font-size: 1.1rem;
+    }
+
+    .section {
+      padding: 18px 18px 4px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .section:last-child { border-bottom: 0; padding-bottom: 18px; }
+
+    .section p.note {
+      color: var(--muted);
+      margin: 8px 0 14px;
+      font-size: 0.93rem;
+      line-height: 1.45;
+    }
+
+    .fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    @media (max-width: 640px) {
+      .fields { grid-template-columns: 1fr; }
+    }
+
+    label {
+      display: block;
+      font-size: 0.92rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    input, select {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      color: var(--text);
+      padding: 12px 12px;
+      font-size: 0.98rem;
+      outline: none;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(92, 124, 250, .18);
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 0.8rem;
+      margin-top: 5px;
+      line-height: 1.35;
+    }
+
+    .full { grid-column: 1 / -1; }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    button {
+      appearance: none;
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 0.96rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform .08s ease, opacity .2s ease;
+    }
+
+    button:hover { opacity: .95; }
+    button:active { transform: translateY(1px); }
+
+    .primary { background: var(--accent); color: white; }
+    .secondary { background: #24304f; color: var(--text); }
+
+    .results {
+      padding: 18px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .score {
+      display: grid;
+      grid-template-columns: 170px 1fr;
+      gap: 16px;
+      align-items: center;
+      background: linear-gradient(135deg, rgba(92,124,250,.12), rgba(255,255,255,.03));
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 18px;
+      padding: 18px;
+    }
+
+    @media (max-width: 700px) {
+      .score { grid-template-columns: 1fr; }
+    }
+
+    .badge {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      margin: 0 auto;
+      text-align: center;
+      font-weight: 800;
+      font-size: 1.15rem;
+      border: 10px solid rgba(255,255,255,.08);
+      background: #1c2540;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+    }
+
+    .badge.good { color: var(--good); }
+    .badge.warn { color: var(--warn); }
+    .badge.bad { color: var(--bad); }
+
+    .score h3 {
+      margin: 0 0 8px;
+      font-size: 1.35rem;
+    }
+
+    .score p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    @media (max-width: 980px) {
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 620px) {
+      .kpi-grid { grid-template-columns: 1fr; }
+    }
+
+    .kpi {
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .kpi .label {
+      color: var(--muted);
+      font-size: 0.87rem;
+      margin-bottom: 10px;
+    }
+
+    .kpi .value {
+      font-size: 1.45rem;
+      font-weight: 700;
+      line-height: 1.15;
+    }
+
+    .kpi .sub {
+      color: var(--muted);
+      font-size: 0.82rem;
+      margin-top: 8px;
+      line-height: 1.35;
+    }
+
+    .analysis {
+      display: grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 14px;
+    }
+
+    @media (max-width: 980px) {
+      .analysis { grid-template-columns: 1fr; }
+    }
+
+    .box {
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .box h4 {
+      margin: 0 0 12px;
+      font-size: 1rem;
+    }
+
+    ul.clean {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.94rem;
+    }
+
+    .table th, .table td {
+      padding: 10px 8px;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      text-align: left;
+    }
+
+    .table th { color: var(--muted); font-weight: 600; }
+    .table td:last-child, .table th:last-child { text-align: right; }
+
+    .pill {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: .8rem;
+      font-weight: 700;
+    }
+
+    .pill.good { background: rgba(32,201,151,.16); color: var(--good); }
+    .pill.warn { background: rgba(245,159,0,.16); color: var(--warn); }
+    .pill.bad { background: rgba(250,82,82,.16); color: var(--bad); }
+
+    .footer-note {
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.5;
+      padding: 0 18px 18px;
+    }
+
+    .mono { font-variant-numeric: tabular-nums; }
+
+    .est-box {
+      margin-top: 10px;
+      background: rgba(92,124,250,.08);
+      border: 1px solid rgba(92,124,250,.18);
+      padding: 12px;
+      border-radius: 12px;
+      color: var(--text);
+      line-height: 1.45;
+      font-size: .92rem;
+    }
+
+    .small-muted {
+      color: var(--muted);
+      font-size: .82rem;
+      line-height: 1.45;
+    }
+
+    .deal-meter {
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 18px;
+      padding: 16px;
+    }
+
+    .meter-track {
+      position: relative;
+      height: 18px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: linear-gradient(90deg,
+        rgba(250,82,82,.9) 0%,
+        rgba(245,159,0,.9) 45%,
+        rgba(32,201,151,.9) 75%,
+        rgba(32,201,151,1) 100%);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+      margin: 12px 0 10px;
+    }
+
+    .meter-pointer {
+      position: absolute;
+      top: -5px;
+      width: 3px;
+      height: 28px;
+      background: white;
+      border-radius: 3px;
+      box-shadow: 0 0 0 2px rgba(11,16,32,.45);
+      transform: translateX(-50%);
+    }
+
+    .meter-labels {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: .8rem;
+      color: var(--muted);
+    }
+
+    .range-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    @media (max-width: 720px) {
+      .range-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .range-card {
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .range-card .title {
+      font-size: .82rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .range-card .val {
+      font-weight: 700;
+      font-size: 1.05rem;
+      line-height: 1.2;
+    }
+
+    .range-card.good { border-color: rgba(32,201,151,.35); }
+    .range-card.warn { border-color: rgba(245,159,0,.35); }
+    .range-card.bad { border-color: rgba(250,82,82,.35); }
+
+    .label-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .label-row label {
+      margin-bottom: 0;
+      flex: 1;
+    }
+
+    .info-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .info-btn {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.06);
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: help;
+      padding: 0;
+    }
+
+    .tooltip {
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% + 10px);
+      transform: translateX(-50%);
+      width: min(280px, 70vw);
+      background: #0f172a;
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 0.82rem;
+      line-height: 1.45;
+      box-shadow: 0 14px 30px rgba(0,0,0,.35);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity .15s ease, visibility .15s ease;
+      z-index: 20;
+      pointer-events: none;
+    }
+
+    .tooltip::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 7px;
+      border-style: solid;
+      border-color: #0f172a transparent transparent transparent;
+    }
+
+    .info-wrap:hover .tooltip,
+    .info-wrap:focus-within .tooltip {
+      opacity: 1;
+      visibility: visible;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Immobilien Deal Checker</h1>
+    <div class="meta">
+      <span class="meta-pill">Version 0.11.0</span>
+      <span class="meta-pill">SemVer-Baseline seit 2026-03-31</span>
+    </div>
+    <div class="subtitle">
+      Trage die wichtigsten Werte ein und du bekommst eine ehrliche Ersteinschätzung. Neu dabei: PLZ, Wohnfläche und eine grobe Mietschätzung für unterstützte Orte. Aktuell ist eine offizielle Mietspiegel-Logik für Offenbach eingebaut. Für andere PLZ kannst du die Miete weiter manuell eingeben.
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="section">
+          <h2>1. Objekt und Kauf</h2>
+          <p class="note">Für den ersten Check reicht eine grobe, aber realistische Eingabe. Die Kaufnebenkosten werden aus Bundesland + Notar/Grundbuch + Makler berechnet.</p>
+          <div class="fields">
+            <div>
+              <div class="label-row"><label for="purchasePrice">Kaufpreis (€)</label><span class="info-wrap"><button type="button" class="info-btn" tabindex="0">i</button><span class="tooltip">Der reine Kaufpreis der Immobilie ohne Kaufnebenkosten wie Grunderwerbsteuer, Notar, Grundbuch oder Makler.</span></span></div>
+              <input id="purchasePrice" type="number" value="250000" min="0" step="1000" />
+            </div>
+            <div>
+              <div class="label-row"><label for="state">Bundesland</label><span class="info-wrap"><button type="button" class="info-btn" tabindex="0">i</button><span class="tooltip">Wird für die Grunderwerbsteuer verwendet. Je nach Bundesland ändern sich dadurch die Kaufnebenkosten.</span></span></div>
+              <select id="state"></select>
+            </div>
+            <div>
+              <div class="label-row"><label for="zipCode">PLZ</label><span class="info-wrap"><button type="button" class="info-btn" tabindex="0">i</button><span class="tooltip">Wird aktuell für die grobe Mietschätzung genutzt. In der eingebauten Version ist vor allem Offenbach hinterlegt.</span></span></div>
+              <input id="zipCode" type="text" value="63065" inputmode="numeric" maxlength="5" />
+              <div class="hint">Aktuell wird Offenbach automatisch erkannt. Weitere Orte könntest du später ergänzen.</div>
+            </div>
+            <div>
+              <div class="label-row"><label for="sqm">Wohnfläche (qm)</label><span class="info-wrap"><button type="button" class="info-btn" tabindex="0">i</button><span class="tooltip">Die Wohnfläche beeinflusst die Miete pro qm, den Kaufpreis pro qm und einige Plausibilitätschecks.</span></span></div>
+              <input id="sqm" type="number" value="65" min="1" step="1" />
+            </div>
+            <div>
+              <div class="label-row"><label for="brokerPercent">Makler in % vom Kaufpreis</label><span class="info-wrap"><button type="button" class="info-btn" tabindex="0">i</button><span class="tooltip">Trage hier den Makleranteil ein, den du als Käufer zahlst. Wenn kein Makler anfällt, einfach 0 eintragen.</span></span></div>
+              <input id="brokerPercent" type="number" value="3.57" min="0" step="0.01" />
+            </div>
+            <div>
+              <div class="label-row"><label for="notaryPercent">Notar + Grundbuch in %</label><span class="info-wrap"><button type="button" class="info-btn" tabindex="0">i</button><span class="tooltip">Vereinfachter Prozentsatz für Notar- und Grundbuchkosten.</span></span></div>
+              <input id="notaryPercent" type="number" value="2.0" min="0" step="0.1" />
+            </div>
+            <div>
+              <div class="label-row"><label for="equity">Eigenkapital (€)</label><span class="info-wrap"><button type="button" class="info-btn" tabindex="0">i</button><span class="tooltip">Eigenkapital senkt die Darlehenssumme. Bei 0 € rechnet der Checker mit Vollfinanzierung des Gesamtinvests.</span></span></div>
+              <input id="equity" type="number" value="0" min="0" step="1000" />
+            </div>
+            <div>
+              <div class="label-row"><label for="buildingShare">Gebäudeanteil in %</label><span class="info-wrap"><button type="button" class="info-btn" tabindex="0">i</button><span class="tooltip">Nur der Gebäudeanteil ist abschreibbar. Der Bodenanteil gehört nicht in die AfA.</span></span></div>
+              <input id="buildingShare" type="number" value="80" min="1" max="100" step="1" />
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>2. Miete schätzen</h2>
+          <p class="note">Der Rechner kann die Miete automatisch setzen, wenn eine unterstützte PLZ erkannt wird. Für Offenbach wird eine grobe Mietspiegel-Schätzung auf Basis von Baujahr, Wohnlage, Ausstattungsniveau und Wohnflächenband verwendet.</p>
+          <div class="fields">
+            <div>
+              <div class="label-row"><label for="yearGroup">Baujahr / Bezugsfertigkeit</label><span class="info-wrap"><button type="button" class="info-btn" tabindex="0">i</button><span class="tooltip">Wird für die grobe Mietschätzung genutzt. Je nach Baujahrsgruppe unterscheiden sich die qm-Mieten.</span></span></div>
+              <select id="yearGroup">
+                <option value="pre1960">Bis 1960</option>
+                <option value="1961_1978">1961 bis 1978</option>
+                <option value="1979_1994">1979 bis 1994</option>
+                <option value="1995_2007">1995 bis 2007</option>
+                <option value="2008_2019">2008 bis 2019</option>
+                <option value="2020plus">Ab 2020</option>
+              </select>
+            </div>
+            <div>
+              <div class="label-row"><label for="locationQuality">Wohnlage</label><span class="info-wrap"><button type="button" class="info-btn" tabindex="0">i</button><span class="tooltip">Sehr grobe Lageeinordnung für die Mietschätzung. Gute Lage erhöht meist die realistische Miete.</span></span></div>
+              <select id="locationQuality">
+                <option value="simple">Einfach</option>
+                <option value="middle" selected>Mittel</option>
+                <option value="good">Gut</option>
+              </select>
+            </div>
+            <div>
+              <div class="label-row"><label for="equipmentType">Ausstattungsniveau</label><span class="info-wrap"><button type="button" class="info-btn" tabindex="0">i</button><span class="tooltip">Benutzerfreundliche Näherung für die Mietschätzung. Standard ist die Basis, modernisiert und gehoben liegen etwas höher.</span></span></div>
+              <select id="equipmentType">
+                <option value="simple">Einfach</option>
+                <option value="standard" selected>Standard</option>
+                <option value="modernized">Modernisiert</option>
+                <option value="premium">Gehoben</option>
+              </select>
+              <div class="hint">Verständlicher als die alte Auswahl. Für die Offenbach-Schätzung wird daraus intern eine Mietspiegel-Basis plus kleiner Zuschlag oder Abschlag abgeleitet.</div>
+            </div>
+            <div>
+              <div class="label-row"><label for="coldRentMonthly">Kaltmiete pro Monat (€)</label><span class="info-wrap"><button type="button" class="info-btn" tabindex="0">i</button><span class="tooltip">Die monatliche Nettokaltmiete ohne Nebenkosten. Dieser Wert kann auch automatisch aus der Schätzung gesetzt werden.</span></span></div>
+              <input id="coldRentMonthly" type="number" value="950" min="0" step="10" />
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="secondary" id="estimateRentBtn">Miete aus PLZ + qm schätzen</button>
+          </div>
+          <div id="rentEstimateBox" class="est-box">
+            Noch keine automatische Mietschätzung ausgeführt.
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>3. Finanzierung</h2>
+          <div class="fields">
+            <div>
+              <div class="label-row"><label for="interestRate">Sollzins p.a. in %</label><span class="info-wrap"><button type="button" class="info-btn" tabindex="0">i</button><span class="tooltip">Der jährliche Darlehenszins. Er beeinflusst die Monatsrate und die steuerlich absetzbaren Zinsen.</span></span></div>
+              <input id="interestRate" type="number" value="3.8" min="0" step="0.01" />
+            </div>
+            <div>
+              <div class="label-row"><label for="repaymentRate">Anfängliche Tilgung p.a. in %</label><span class="info-wrap"><button type="button" class="info-btn" tabindex="0">i</button><span class="tooltip">Die anfängliche jährliche Tilgung. Sie senkt die Restschuld, ist aber steuerlich nicht absetzbar.</span></span></div>
+              <input id="repaymentRate" type="number" value="1.5" min="0" step="0.1" />
+            </div>
+            <div class="full">
+              <div class="label-row"><label for="evaluationMode">Bewertungsmodus</label><span class="info-wrap"><button type="button" class="info-btn" tabindex="0">i</button><span class="tooltip">Streng ist eher für 100 bis 110 % Finanzierung und harten Cashflow-Fokus. Realistisch ist der beste Allround-Modus. Entspannt ist großzügiger.</span></span></div>
+              <select id="evaluationMode">
+                <option value="strict">Streng – für 100 bis 110 % Finanzierung und Cashflow-Fokus</option>
+                <option value="balanced" selected>Realistisch – ausgewogener Erstcheck</option>
+                <option value="soft">Entspannt – eher für normale Kapitalanlage-Sichtung</option>
+              </select>
+              <div class="hint">Der Rechner war bisher sehr streng. Mit diesem Modus kannst du die Einordnung besser an deinen Stil anpassen.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>4. Laufende Kosten</h2>
+          <div class="fields">
+            <div>
+              <div class="label-row"><label for="nonApportionableMonthly">Nicht umlagefähige Kosten pro Monat (€)</label><span class="info-wrap"><button type="button" class="info-btn" tabindex="0">i</button><span class="tooltip">Kosten, die du als Vermieter selbst trägst und nicht auf den Mieter umlegen kannst, zum Beispiel Teile des Hausgelds.</span></span></div>
+              <input id="nonApportionableMonthly" type="number" value="80" min="0" step="5" />
+            </div>
+            <div>
+              <div class="label-row"><label for="maintenanceMonthly">Zusätzliche Rücklage pro Monat (€)</label><span class="info-wrap"><button type="button" class="info-btn" tabindex="0">i</button><span class="tooltip">Eigener Sicherheits- oder Instandhaltungspuffer. Wirkt hier im Cashflow, aber nicht direkt steuerlich.</span></span></div>
+              <input id="maintenanceMonthly" type="number" value="50" min="0" step="5" />
+            </div>
+            <div>
+              <div class="label-row"><label for="vacancyPercent">Leerstands- / Mietausfallpuffer in % der Jahreskaltmiete</label><span class="info-wrap"><button type="button" class="info-btn" tabindex="0">i</button><span class="tooltip">Sicherheitsabschlag für Leerstand, Ausfall oder nicht vollständig realisierte Miete.</span></span></div>
+              <input id="vacancyPercent" type="number" value="3" min="0" step="0.5" />
+            </div>
+            <div>
+              <div class="label-row"><label for="rentIncreasePercent">Geplante Mieterhöhung in %</label><span class="info-wrap"><button type="button" class="info-btn" tabindex="0">i</button><span class="tooltip">Je nach Modus entweder ein einmaliger Aufschlag oder eine jährliche Steigerung über mehrere Jahre.</span></span></div>
+              <input id="rentIncreasePercent" type="number" value="0" min="0" step="0.5" />
+              <div class="hint">Kann jetzt als einmaliges Szenario oder als jährliche Steigerung gerechnet werden.</div>
+            </div>
+            <div>
+              <div class="label-row"><label for="rentIncreaseMode">Modus Mieterhöhung</label><span class="info-wrap"><button type="button" class="info-btn" tabindex="0">i</button><span class="tooltip">Einmalig bedeutet: Die Miete springt einmal auf einen höheren Wert. Jährlich bedeutet: Die Miete wächst mit dem eingegebenen Prozentsatz über die gewählte Anzahl an Jahren.</span></span></div>
+              <select id="rentIncreaseMode">
+                <option value="one_time" selected>Einmaliges Szenario</option>
+                <option value="annual">Jährliche Steigerung</option>
+              </select>
+            </div>
+            <div>
+              <div class="label-row"><label for="rentIncreasePreset">Preset Mieterhöhung</label><span class="info-wrap"><button type="button" class="info-btn" tabindex="0">i</button><span class="tooltip">Setzt sinnvolle Beispielwerte. Gesetzlich vorsichtig orientiert sich an einem defensiven Rahmen, marktüblich ist neutral, optimistisch eher sportlich.</span></span></div>
+              <select id="rentIncreasePreset">
+                <option value="custom" selected>Benutzerdefiniert</option>
+                <option value="careful">Gesetzlich vorsichtig</option>
+                <option value="market">Marktüblich</option>
+                <option value="optimistic">Optimistisch</option>
+              </select>
+            </div>
+            <div>
+              <div class="label-row"><label for="capAreaMode">Kappungsgrenze</label><span class="info-wrap"><button type="button" class="info-btn" tabindex="0">i</button><span class="tooltip">In vielen Gebieten gilt bei Bestandsmieten maximal 20 % in 3 Jahren, in angespannten Wohnungsmärkten oft 15 % in 3 Jahren. Das ist hier nur eine vorsichtige Orientierung.</span></span></div>
+              <select id="capAreaMode">
+                <option value="15">15 % in 3 Jahren</option>
+                <option value="20" selected>20 % in 3 Jahren</option>
+              </select>
+            </div>
+            <div>
+              <div class="label-row"><label for="rentIncreaseYears">Anzahl Jahre</label><span class="info-wrap"><button type="button" class="info-btn" tabindex="0">i</button><span class="tooltip">Nur relevant bei jährlicher Steigerung. Beispiel: 2 % über 3 Jahre rechnet ungefähr mit 1,02 hoch 3.</span></span></div>
+              <input id="rentIncreaseYears" type="number" value="3" min="1" max="20" step="1" />
+            </div>
+            <div>
+              <div class="label-row"><label for="rentIncreaseApplied">Mieterhöhung anwenden</label><span class="info-wrap"><button type="button" class="info-btn" tabindex="0">i</button><span class="tooltip">Schaltet das Mieterhöhungs-Szenario ein oder aus.</span></span></div>
+              <select id="rentIncreaseApplied">
+                <option value="no">Nein</option>
+                <option value="yes">Ja</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>5. Steuern und AfA</h2>
+          <p class="note">Vereinfachte Steuerbetrachtung: berücksichtigt Zinsen und AfA. Tilgung wird bewusst nicht steuerlich angesetzt.</p>
+          <div class="fields">
+            <div>
+              <div class="label-row"><label for="taxRate">Persönlicher Grenzsteuersatz in %</label><span class="info-wrap"><button type="button" class="info-btn" tabindex="0">i</button><span class="tooltip">Damit schätzt der Checker den Steuereffekt auf Zinsen, AfA und einige laufende Kosten.</span></span></div>
+              <input id="taxRate" type="number" value="42" min="0" max="50" step="1" />
+            </div>
+            <div>
+              <div class="label-row"><label for="depreciationMode">AfA-Modell</label><span class="info-wrap"><button type="button" class="info-btn" tabindex="0">i</button><span class="tooltip">Hier wählst du normale AfA oder eine angenommene Restnutzungsdauer für ein Szenario.</span></span></div>
+              <select id="depreciationMode">
+                <option value="normal-old">Normale AfA 2 %</option>
+                <option value="normal-new">Normale AfA 3 %</option>
+                <option value="rul">Restnutzungsdauer</option>
+              </select>
+            </div>
+            <div class="full" id="rulWrap" style="display:none;">
+              <div class="label-row"><label for="remainingUsefulLife">Restnutzungsdauer in Jahren</label><span class="info-wrap"><button type="button" class="info-btn" tabindex="0">i</button><span class="tooltip">Nur für Szenarien. Eine kürzere Restnutzungsdauer erhöht die AfA, muss in der Praxis aber belastbar nachweisbar sein.</span></span></div>
+              <input id="remainingUsefulLife" type="number" value="25" min="1" step="1" />
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="primary" id="calcBtn">Deal prüfen</button>
+            <button class="secondary" id="preset110Btn">Preset 110 % Finanzierung</button>
+            <button class="secondary" id="presetConservativeBtn">Vorsichtiger Modus</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="results">
+          <div class="score">
+            <div id="scoreBadge" class="badge warn">Prüfen</div>
+            <div>
+              <h3 id="scoreTitle">Noch keine Berechnung</h3>
+              <p id="scoreText">Trage links deine Daten ein. Die Bewertung ist bewusst streng, vor allem wenn du mit wenig oder keinem Eigenkapital rechnest.</p>
+            </div>
+          </div>
+
+          <div class="deal-meter">
+            <div style="display:flex; justify-content:space-between; gap:12px; align-items:center;">
+              <strong>Deal-Meter</strong>
+              <span id="dealMeterText" class="small-muted">Noch keine Bewertung</span>
+            </div>
+            <div class="meter-track">
+              <div id="dealMeterPointer" class="meter-pointer" style="left:50%;"></div>
+            </div>
+            <div class="meter-labels">
+              <span>Schwach</span>
+              <span>Knapp</span>
+              <span>Okay</span>
+              <span>Stark</span>
+            </div>
+            <div class="range-grid">
+              <div class="range-card bad">
+                <div class="title">Rendite-Ziel</div>
+                <div class="val" id="targetYield">–</div>
+              </div>
+              <div class="range-card warn">
+                <div class="title">Faktor-Ziel</div>
+                <div class="val" id="targetFactor">–</div>
+              </div>
+              <div class="range-card warn">
+                <div class="title">Cashflow-Ziel</div>
+                <div class="val" id="targetCashflow">–</div>
+              </div>
+              <div class="range-card good">
+                <div class="title">Break-even-Miete</div>
+                <div class="val" id="dealGap">–</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="kpi-grid">
+            <div class="kpi">
+              <div class="label">Bierdeckel: Kaufpreis pro qm</div>
+              <div class="value mono" id="pricePerSqm">–</div>
+              <div class="sub">Schneller Plausibilitätscheck aus Kaufpreis geteilt durch Wohnfläche.</div>
+            </div>
+            <div class="kpi">
+              <div class="label">Bierdeckel: Miete pro qm</div>
+              <div class="value mono" id="rentPerSqmTop">–</div>
+              <div class="sub">Monatliche Kaltmiete geteilt durch Wohnfläche.</div>
+            </div>
+            <div class="kpi">
+              <div class="label">Bierdeckel-Fazit</div>
+              <div class="value mono" id="beerMatVerdict">–</div>
+              <div class="sub">Sehr grobe Vorprüfung nach Kaufpreis, Miete und Faktor.</div>
+            </div>
+            <div class="kpi">
+              <div class="label">Kaltmiete Basis</div>
+              <div class="value mono" id="rentBase">–</div>
+              <div class="sub">Die ursprünglich eingegebene oder geschätzte Kaltmiete ohne Mieterhöhungs-Szenario.</div>
+            </div>
+            <div class="kpi">
+              <div class="label">Kaltmiete laut Rechnung</div>
+              <div class="value mono" id="rentUsed">–</div>
+              <div class="sub">Falls aktiviert, inklusive Mieterhöhungs-Szenario.</div>
+            </div>
+            <div class="kpi">
+              <div class="label">Miete je qm</div>
+              <div class="value mono" id="rentPerSqm">–</div>
+              <div class="sub">Hilft beim schnellen Plausibilitätscheck.</div>
+            </div>
+            <div class="kpi">
+              <div class="label">Bruttomietrendite</div>
+              <div class="value mono" id="grossYield">–</div>
+              <div class="sub">Für Vollfinanzierung sind grob ab 5,5 % interessant, ab 6 % eher gut.</div>
+            </div>
+            <div class="kpi">
+              <div class="label">Faktor</div>
+              <div class="value mono" id="multiplier">–</div>
+              <div class="sub">Bis 20 stark, 20 bis 23 okay, über 25 meist zu teuer für Cashflow.</div>
+            </div>
+            <div class="kpi">
+              <div class="label">Finanzierungsquote</div>
+              <div class="value mono" id="ltv">–</div>
+              <div class="sub">Bezogen auf den Kaufpreis. Über 100 % ist aggressiv.</div>
+            </div>
+            <div class="kpi">
+              <div class="label">Monatlicher Cashflow vor Steuer</div>
+              <div class="value mono" id="monthlyCashflowPreTax">–</div>
+              <div class="sub">Kaltmiete minus Kreditrate minus Kosten minus Leerstandspuffer.</div>
+            </div>
+            <div class="kpi">
+              <div class="label">Monatlicher Cashflow nach Steuer</div>
+              <div class="value mono" id="monthlyCashflowAfterTax">–</div>
+              <div class="sub">Steuereffekt auf Basis des steuerlichen Ergebnisses aus Vermietung.</div>
+            </div>
+            <div class="kpi">
+              <div class="label">Steuerliches Ergebnis p.a.</div>
+              <div class="value mono" id="taxableResultAnnual">–</div>
+              <div class="sub">Miete minus Zinsen minus AfA minus abziehbare laufende Kosten. Rücklagen sind hier bewusst nicht enthalten.</div>
+            </div>
+            <div class="kpi">
+              <div class="label">Mindestmiete für 0 € vor Steuer</div>
+              <div class="value mono" id="breakEvenRent">–</div>
+              <div class="sub">Ab dieser Monatskaltmiete ist der Deal vor Steuer ungefähr neutral.</div>
+            </div>
+            <div class="kpi">
+              <div class="label">Mieterhöhungs-Hinweis</div>
+              <div class="value mono" id="rentIncreaseLegalHint">–</div>
+              <div class="sub">Prüft grob, ob das Szenario eher defensiv oder eher sportlich wirkt.</div>
+            </div>
+          </div>
+
+          <div class="analysis">
+            <div class="box">
+              <h4>Rechnung im Überblick</h4>
+              <table class="table">
+                <tbody>
+                  <tr><th>Gesamtkaufnebenkosten</th><td id="closingCosts">–</td></tr>
+                  <tr><th>Gesamtinvest inkl. NK</th><td id="totalInvestment">–</td></tr>
+                  <tr><th>Darlehen</th><td id="loanAmount">–</td></tr>
+                  <tr><th>Monatliche Kreditrate</th><td id="monthlyDebtService">–</td></tr>
+                  <tr><th>Jahreskaltmiete</th><td id="annualRent">–</td></tr>
+                  <tr><th>Jährliche Zinsen im 1. Jahr</th><td id="annualInterest">–</td></tr>
+                  <tr><th>Abziehbare laufende Kosten p.a.</th><td id="annualDeductibleCosts">–</td></tr>
+                  <tr><th>Jährliche AfA</th><td id="annualDepreciation">–</td></tr>
+                  <tr><th>Steuerliches Ergebnis p.a.</th><td id="annualTaxableResult">–</td></tr>
+                  <tr><th>Steuereffekt p.a.</th><td id="annualTaxEffect">–</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="box">
+              <h4>Einordnung</h4>
+              <div id="statusPills" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;"></div>
+              <ul class="clean" id="analysisList"></ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-note">
+          Die Mietschätzung ist eine grobe Hilfe. Aktuell ist nur eine feste Logik für Offenbach eingebaut. Steuerlich rechnet diese Version sauberer als zuvor: Zinsen sind berücksichtigt, Tilgung nicht, Rücklagen wirken nur im Cashflow und nicht direkt in der Steuer. Die AfA basiert jetzt auf dem Gebäudeanteil inklusive anteiliger Kaufnebenkosten. Die Auswahl beim Ausstattungsniveau ist jetzt verständlicher formuliert. Mieterhöhungs-Presets sind nur Rechenszenarien und ersetzen keine Prüfung von Vergleichsmiete, Kappungsgrenze oder lokalen Regeln.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const taxMap = {
+      "Baden-Württemberg": 5.0,
+      "Bayern": 3.5,
+      "Berlin": 6.0,
+      "Brandenburg": 6.5,
+      "Bremen": 5.0,
+      "Hamburg": 5.5,
+      "Hessen": 6.0,
+      "Mecklenburg-Vorpommern": 6.0,
+      "Niedersachsen": 5.0,
+      "Nordrhein-Westfalen": 6.5,
+      "Rheinland-Pfalz": 5.0,
+      "Saarland": 6.5,
+      "Sachsen": 5.5,
+      "Sachsen-Anhalt": 5.0,
+      "Schleswig-Holstein": 6.5,
+      "Thüringen": 6.5,
+    };
+
+    const offenbachPlz = new Set(["63065","63067","63069","63071","63073","63075"]);
+
+    const offenbachRentTable = {
+      pre1960: {
+        s1: { full: 7.10, limited: 6.10 },
+        s2: { full: 6.95, limited: 6.00 },
+        s3: { full: 6.80, limited: 5.85 },
+        m1: { full: 7.85, limited: 6.45 },
+        m2: { full: 7.70, limited: 6.25 },
+        m3: { full: 7.65, limited: 6.05 },
+        g1: { full: 8.95, limited: 7.45 },
+        g2: { full: 8.80, limited: 7.35 },
+        g3: { full: 8.70, limited: 7.30 }
+      },
+      "1961_1978": {
+        s1: { full: 7.70, limited: 6.85 },
+        s2: { full: 7.45, limited: 6.80 },
+        s3: { full: 7.55, limited: 6.70 },
+        m1: { full: 9.10, limited: 7.50 },
+        m2: { full: 8.85, limited: 7.45 },
+        m3: { full: 8.75, limited: 7.30 },
+        g1: { full: 9.40, limited: 8.20 },
+        g2: { full: 9.15, limited: 8.10 },
+        g3: { full: 9.05, limited: 7.80 }
+      },
+      "1979_1994": {
+        s1: { full: 8.10 }, s2: { full: 8.10 }, s3: { full: 8.10 },
+        m1: { full: 9.75 }, m2: { full: 9.55 }, m3: { full: 9.35 },
+        g1: { full: 10.80 }, g2: { full: 10.40 }, g3: { full: 10.20 }
+      },
+      "1995_2007": {
+        s1: { full: 9.20 }, s2: { full: 9.05 }, s3: { full: 8.75 },
+        m1: { full: 10.60 }, m2: { full: 10.50 }, m3: { full: 10.30 },
+        g1: { full: 11.50 }, g2: { full: 11.35 }, g3: { full: 11.35 }
+      },
+      "2008_2019": {
+        s1: { full: 10.35 }, s2: { full: 10.00 }, s3: { full: 9.80 },
+        m1: { full: 11.85 }, m2: { full: 11.75 }, m3: { full: 11.40 },
+        g1: { full: 12.95 }, g2: { full: 12.40 }, g3: { full: 12.25 }
+      }
+    };
+
+    const stateSelect = document.getElementById('state');
+    Object.keys(taxMap).forEach(state => {
+      const opt = document.createElement('option');
+      opt.value = state;
+      opt.textContent = `${state} (${taxMap[state].toFixed(1).replace('.', ',')} % GrESt)`;
+      stateSelect.appendChild(opt);
+    });
+    stateSelect.value = 'Hessen';
+
+    const currency2 = (n) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
+    const percent = (n, digits = 2) => `${n.toLocaleString('de-DE', { minimumFractionDigits: digits, maximumFractionDigits: digits })} %`;
+    const number = (n, digits = 1) => n.toLocaleString('de-DE', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+
+    function val(id) {
+      return parseFloat(document.getElementById(id).value || '0');
+    }
+
+    function setText(id, text) {
+      document.getElementById(id).textContent = text;
+    }
+
+    function pill(type, text) {
+      return `<span class="pill ${type}">${text}</span>`;
+    }
+
+    function sizeBandFromSqm(sqm) {
+      if (sqm >= 35 && sqm <= 59) return "1";
+      if (sqm >= 60 && sqm <= 79) return "2";
+      if (sqm >= 80 && sqm <= 100) return "3";
+      return null;
+    }
+
+    function locationPrefix(v) {
+      if (v === "simple") return "s";
+      if (v === "middle") return "m";
+      return "g";
+    }
+
+    function estimateRent() {
+      const zip = document.getElementById("zipCode").value.trim();
+      const sqm = val("sqm");
+      const yearGroup = document.getElementById("yearGroup").value;
+      const locationQuality = document.getElementById("locationQuality").value;
+      const equipmentType = document.getElementById("equipmentType").value;
+      const box = document.getElementById("rentEstimateBox");
+
+      if (!offenbachPlz.has(zip)) {
+        box.innerHTML = "Für diese PLZ ist aktuell keine offizielle Mietspiegel-Logik eingebaut. Du kannst die Kaltmiete weiter manuell eintragen oder später weitere Orte ergänzen.";
+        return false;
+      }
+
+      if (yearGroup === "2020plus") {
+        box.innerHTML = "Offenbach erkannt, aber der integrierte Mietspiegel greift nicht für Vermietungen ab Baujahr 2020. Bitte Miete manuell ansetzen.";
+        return false;
+      }
+
+      const band = sizeBandFromSqm(sqm);
+      if (!band) {
+        box.innerHTML = "Offenbach erkannt, aber die integrierte Schätzung gilt nur für 35 bis 100 qm. Bitte Miete manuell ansetzen.";
+        return false;
+      }
+
+      const key = locationPrefix(locationQuality) + band;
+      const row = offenbachRentTable[yearGroup] && offenbachRentTable[yearGroup][key];
+      if (!row) {
+        box.innerHTML = "Für diese Kombination konnte keine Schätzung gefunden werden. Bitte Miete manuell ansetzen.";
+        return false;
+      }
+
+      let rentPerSqm = 0;
+
+      // Verständlichere UX:
+      // simple -> eher unter Standard
+      // standard -> Mietspiegel-Basis
+      // modernized -> leichter Zuschlag
+      // premium -> etwas stärkerer Zuschlag
+      if (equipmentType === "simple") {
+        if (row.limited) rentPerSqm = row.limited;
+        else if (row.full) rentPerSqm = row.full * 0.95;
+      } else if (equipmentType === "standard") {
+        rentPerSqm = row.full || row.limited || 0;
+      } else if (equipmentType === "modernized") {
+        rentPerSqm = (row.full || row.limited || 0) * 1.05;
+      } else if (equipmentType === "premium") {
+        rentPerSqm = (row.full || row.limited || 0) * 1.10;
+      }
+
+      if (!rentPerSqm) {
+        box.innerHTML = "Für diese Kombination konnte keine belastbare Schätzung gebildet werden. Bitte Miete manuell ansetzen.";
+        return false;
+      }
+
+      const monthlyRent = rentPerSqm * sqm;
+      document.getElementById("coldRentMonthly").value = monthlyRent.toFixed(0);
+
+      box.innerHTML = `
+        <strong>Offenbach erkannt.</strong><br>
+        Grobe Schätzung: <strong>${number(rentPerSqm, 2)} €/qm</strong><br>
+        Daraus ergibt sich bei <strong>${number(sqm, 0)} qm</strong> eine geschätzte Kaltmiete von <strong>${currency2(monthlyRent)}</strong> pro Monat.<br>
+        <span class="small-muted">Hinweis: Das Ausstattungsniveau ist hier eine benutzerfreundliche Näherung. Standard orientiert sich an der eingebauten Mietspiegel-Basis, modernisiert und gehoben rechnen mit moderaten Zuschlägen, einfach eher etwas darunter.</span>
+      `;
+      return true;
+    }
+
+
+    function getEvaluationConfig(mode) {
+      if (mode === 'strict') {
+        return {
+          yieldStrong: 6.0,
+          yieldOk: 5.5,
+          yieldMin: 5.0,
+          factorStrong: 20,
+          factorOk: 23,
+          factorLimit: 25,
+          ltvGood: 90,
+          ltvOk: 100,
+          cashflowStrong: 1200,
+          cashflowMin: 0,
+          meterLabel: 'Streng'
+        };
+      }
+      if (mode === 'soft') {
+        return {
+          yieldStrong: 5.5,
+          yieldOk: 5.0,
+          yieldMin: 4.5,
+          factorStrong: 22,
+          factorOk: 25,
+          factorLimit: 27,
+          ltvGood: 95,
+          ltvOk: 105,
+          cashflowStrong: 600,
+          cashflowMin: -1200,
+          meterLabel: 'Entspannt'
+        };
+      }
+      return {
+        yieldStrong: 5.75,
+        yieldOk: 5.1,
+        yieldMin: 4.75,
+        factorStrong: 21,
+        factorOk: 24,
+        factorLimit: 26,
+        ltvGood: 92,
+        ltvOk: 102,
+        cashflowStrong: 600,
+        cashflowMin: -600,
+        meterLabel: 'Realistisch'
+      };
+    }
+
+
+    function applyRentIncreasePreset() {
+      const preset = document.getElementById('rentIncreasePreset').value;
+      const modeEl = document.getElementById('rentIncreaseMode');
+      const percentEl = document.getElementById('rentIncreasePercent');
+      const yearsEl = document.getElementById('rentIncreaseYears');
+      const appliedEl = document.getElementById('rentIncreaseApplied');
+      const capMode = document.getElementById('capAreaMode').value;
+
+      if (preset === 'careful') {
+        modeEl.value = 'one_time';
+        percentEl.value = capMode === '15' ? '8' : '10';
+        yearsEl.value = '3';
+        appliedEl.value = 'yes';
+      } else if (preset === 'market') {
+        modeEl.value = 'annual';
+        percentEl.value = capMode === '15' ? '1.5' : '2';
+        yearsEl.value = '3';
+        appliedEl.value = 'yes';
+      } else if (preset === 'optimistic') {
+        modeEl.value = 'annual';
+        percentEl.value = capMode === '15' ? '2.5' : '3';
+        yearsEl.value = '3';
+        appliedEl.value = 'yes';
+      }
+    }
+
+    function calc() {
+      const purchasePrice = val('purchasePrice');
+      const state = stateSelect.value;
+      const brokerPercent = val('brokerPercent') / 100;
+      const notaryPercent = val('notaryPercent') / 100;
+      const equity = val('equity');
+      const buildingShare = val('buildingShare') / 100;
+      const interestRate = val('interestRate') / 100;
+      const repaymentRate = val('repaymentRate') / 100;
+      const coldRentMonthlyBase = val('coldRentMonthly');
+      const sqm = val('sqm');
+      const nonApportionableMonthly = val('nonApportionableMonthly');
+      const maintenanceMonthly = val('maintenanceMonthly');
+      const vacancyPercent = val('vacancyPercent') / 100;
+      const rentIncreasePercent = val('rentIncreasePercent') / 100;
+      const rentIncreaseMode = document.getElementById('rentIncreaseMode').value;
+      const rentIncreaseYears = Math.max(1, val('rentIncreaseYears'));
+      const rentIncreaseApplied = document.getElementById('rentIncreaseApplied').value === 'yes';
+      const capAreaMode = parseFloat(document.getElementById('capAreaMode').value);
+      const taxRate = val('taxRate') / 100;
+      const depreciationMode = document.getElementById('depreciationMode').value;
+      const evaluationMode = document.getElementById('evaluationMode').value;
+      const cfg = getEvaluationConfig(evaluationMode);
+      const remainingUsefulLife = Math.max(1, val('remainingUsefulLife'));
+
+      const transferTaxPercent = (taxMap[state] || 0) / 100;
+      const closingCosts = purchasePrice * (transferTaxPercent + brokerPercent + notaryPercent);
+      const totalInvestment = purchasePrice + closingCosts;
+      const loanAmount = Math.max(0, totalInvestment - equity);
+      const ltv = purchasePrice > 0 ? (loanAmount / purchasePrice) * 100 : 0;
+
+      let rentScenarioFactor = 1;
+      if (rentIncreaseApplied) {
+        if (rentIncreaseMode === 'annual') {
+          rentScenarioFactor = Math.pow(1 + rentIncreasePercent, rentIncreaseYears);
+        } else {
+          rentScenarioFactor = 1 + rentIncreasePercent;
+        }
+      }
+      const coldRentMonthly = coldRentMonthlyBase * rentScenarioFactor;
+      const annualRent = coldRentMonthly * 12;
+
+      const totalIncreasePercent = ((coldRentMonthly / Math.max(coldRentMonthlyBase, 0.0001)) - 1) * 100;
+      let rentIncreaseLegalHint = 'Nicht aktiv';
+      if (rentIncreaseApplied && rentIncreasePercent > 0) {
+        if (rentIncreaseMode === 'one_time') {
+          rentIncreaseLegalHint = totalIncreasePercent <= capAreaMode ? 'Eher defensiv' : 'Eher sportlich';
+        } else {
+          rentIncreaseLegalHint = totalIncreasePercent <= capAreaMode ? 'Im groben Rahmen' : 'Über Kappungsgrenze';
+        }
+      }
+      const rentPerSqm = sqm > 0 ? coldRentMonthly / sqm : 0;
+      const pricePerSqm = sqm > 0 ? purchasePrice / sqm : 0;
+      const grossYield = purchasePrice > 0 ? (annualRent / purchasePrice) * 100 : 0;
+      const multiplier = annualRent > 0 ? purchasePrice / annualRent : 0;
+
+      const monthlyDebtService = loanAmount * (interestRate + repaymentRate) / 12;
+      const annualInterest = loanAmount * interestRate;
+      const annualNonApportionable = nonApportionableMonthly * 12;
+      const annualMaintenance = maintenanceMonthly * 12;
+      const annualVacancy = annualRent * vacancyPercent;
+
+      const depreciableBase = (purchasePrice + closingCosts) * buildingShare;
+      let annualDepreciation = 0;
+      if (depreciationMode === 'normal-old') annualDepreciation = depreciableBase * 0.02;
+      if (depreciationMode === 'normal-new') annualDepreciation = depreciableBase * 0.03;
+      if (depreciationMode === 'rul') annualDepreciation = depreciableBase / remainingUsefulLife;
+
+      const annualCashflowPreTax = annualRent - (monthlyDebtService * 12) - annualNonApportionable - annualMaintenance - annualVacancy;
+
+      // Steuerlogik:
+      // - Zinsen sind abziehbar
+      // - nicht umlagefähige laufende Kosten sind abziehbar
+      // - Leerstand/Mietausfall als kalkulatorischer Puffer bleibt nur im Cashflow
+      // - Rücklagen/Instandhaltungspuffer bleiben nur im Cashflow, bis echte Kosten entstehen
+      // - Tilgung ist nicht abziehbar
+      const annualDeductibleCosts = annualNonApportionable;
+      const annualTaxableResult = annualRent - annualInterest - annualDeductibleCosts - annualDepreciation;
+      const annualTaxEffect = -annualTaxableResult * taxRate;
+      const annualCashflowAfterTax = annualCashflowPreTax + annualTaxEffect;
+
+      const breakEvenAnnualRent = (monthlyDebtService * 12) + annualNonApportionable + annualMaintenance;
+      const breakEvenRent = breakEvenAnnualRent / Math.max(0.0001, (12 * (1 - vacancyPercent)));
+
+      let score = 0;
+      const messages = [];
+      const pills = [];
+
+      if (grossYield >= cfg.yieldStrong) { score += 3; pills.push(pill('good', 'Rendite stark')); messages.push('Die Bruttomietrendite liegt im Bereich, der für diesen Bewertungsmodus klar interessant ist.'); }
+      else if (grossYield >= cfg.yieldOk) { score += 2; pills.push(pill('warn', 'Rendite okay')); messages.push('Die Bruttomietrendite ist brauchbar, aber noch nicht automatisch stark.'); }
+      else if (grossYield >= cfg.yieldMin) { score += 1; pills.push(pill('warn', 'Rendite eher knapp')); messages.push('Die Bruttomietrendite ist eher knapp, aber nicht automatisch ein Ausschluss.'); }
+      else { score -= 2; pills.push(pill('bad', 'Rendite zu dünn')); messages.push('Die Bruttomietrendite liegt unter dem Zielbereich des gewählten Modus.'); }
+
+      if (multiplier > 0 && multiplier <= cfg.factorStrong) { score += 3; pills.push(pill('good', 'Faktor stark')); messages.push('Der Faktor liegt in einem Bereich, in dem echte Luft entstehen kann.'); }
+      else if (multiplier <= cfg.factorOk) { score += 2; pills.push(pill('warn', 'Faktor okay')); messages.push('Der Faktor ist noch okay, aber nicht automatisch günstig.'); }
+      else if (multiplier <= cfg.factorLimit) { score += 0; pills.push(pill('warn', 'Faktor grenzwertig')); messages.push('Der Faktor ist schon recht ambitioniert.'); }
+      else { score -= 2; pills.push(pill('bad', 'Faktor teuer')); messages.push('Der Faktor liegt über dem Zielbereich des gewählten Modus.'); }
+
+      if (ltv <= cfg.ltvGood) { score += 2; pills.push(pill('good', 'Finanzierung entspannt')); messages.push('Die Finanzierungsquote ist für diesen Modus recht entspannt.'); }
+      else if (ltv <= cfg.ltvOk) { score += 1; pills.push(pill('warn', 'Finanzierung sportlich')); messages.push('Die Finanzierungsquote ist sportlich, aber noch vertretbar.'); }
+      else { score -= 2; pills.push(pill('bad', 'Finanzierung aggressiv')); messages.push('Die Finanzierung ist für diesen Modus aggressiv.'); }
+
+      if (annualCashflowPreTax >= cfg.cashflowStrong) { score += 3; pills.push(pill('good', 'Cashflow stark')); messages.push('Vor Steuer bleibt bereits spürbare Luft.'); }
+      else if (annualCashflowPreTax >= cfg.cashflowMin) { score += 1; pills.push(pill('warn', 'Cashflow okay')); messages.push('Vor Steuer ist der Deal zumindest im Zielkorridor dieses Modus.'); }
+      else if (annualCashflowAfterTax >= 0) { score += 0; pills.push(pill('warn', 'Nur mit Steuer tragbar')); messages.push('Ohne Steuereffekt wäre der Deal negativ.'); }
+      else { score -= 3; pills.push(pill('bad', 'Cashflow negativ')); messages.push('Selbst mit Steuereffekt bleibt der Deal schwach.'); }
+
+      if (repaymentRate < 1.5) {
+        messages.push('Die Tilgung ist niedrig. Das verbessert den Start-Cashflow, lässt aber die Restschuld hoch.');
+      }
+      if (rentIncreaseApplied && rentIncreasePercent > 0) {
+        const preset = document.getElementById('rentIncreasePreset').value;
+        if (rentIncreaseMode === 'annual') {
+          messages.push(`Die Mieterhöhung wird hier als jährliche Steigerung über ${rentIncreaseYears} Jahre gerechnet. Das ist nur ein Szenario und sollte nicht die einzige Rettung des Deals sein.`);
+        } else {
+          messages.push('Die Mieterhöhung wird hier als einmaliges Szenario gerechnet. Ein guter Deal sollte nicht davon abhängen.');
+        }
+        if (preset === 'careful') messages.push('Aktiv ist das Preset „gesetzlich vorsichtig“. Das ist eher konservativ angesetzt.');
+        if (preset === 'market') messages.push('Aktiv ist das Preset „marktüblich“. Das ist ein neutraler Mittelkorridor.');
+        if (preset === 'optimistic') messages.push('Aktiv ist das Preset „optimistisch“. Diese Annahme ist deutlich sportlicher.');
+        messages.push(`Grobe Orientierung zur Kappungsgrenze: gewählt sind ${number(capAreaMode, 0)} % in 3 Jahren. Vergleichsmiete und lokale Regeln musst du trotzdem separat prüfen.`);
+      }
+      if (depreciationMode === 'rul') {
+        messages.push('Restnutzungsdauer ist hier nur als Rechenmodell drin. Ob das steuerlich anerkannt wird, ist ein eigener Prüfpunkt.');
+      }
+      messages.push('Steuerlich werden hier Zinsen, AfA und nicht umlagefähige laufende Kosten berücksichtigt. Tilgung sowie reine Rücklagen wirken nur im Cashflow, nicht direkt in der Steuer.');
+
+      let scoreClass = 'warn';
+      let scoreTitle = 'Genau prüfen';
+      let scoreText = 'Der Deal kann interessant sein, aber nur wenn Mikrolage, Zustand, WEG und echte Vermietbarkeit sauber passen.';
+      const goodCutoff = evaluationMode === 'strict' ? 7 : (evaluationMode === 'balanced' ? 5 : 4);
+      const badCutoff = evaluationMode === 'strict' ? 1 : (evaluationMode === 'balanced' ? -1 : -2);
+
+      if (score >= goodCutoff) {
+        scoreClass = 'good';
+        scoreTitle = 'Kann sich lohnen';
+        scoreText = 'Die Zahlen sehen für diesen Bewertungsmodus gut aus. Das ist noch kein Blindkauf, aber klar interessanter als der Durchschnitt.';
+      } else if (score <= badCutoff) {
+        scoreClass = 'bad';
+        scoreTitle = 'Eher kein guter Deal';
+        scoreText = 'Die Rechnung wirkt für diesen Bewertungsmodus zu dünn.';
+      }
+
+      const scoreNormalized = Math.max(0, Math.min(100, ((score + 4) / 14) * 100));
+      document.getElementById('dealMeterPointer').style.left = scoreNormalized + '%';
+      document.getElementById('dealMeterText').textContent =
+        (scoreClass === 'good' ? 'Aktuell stark' :
+        scoreClass === 'bad' ? 'Aktuell eher schwach' :
+        'Aktuell im Mittelfeld') + ' – Modus: ' + cfg.meterLabel;
+      const breakEvenGap = coldRentMonthly - breakEvenRent;
+      setText('targetYield', `ab ${number(cfg.yieldOk, 1)} % interessant`);
+      setText('targetFactor', `bis ${number(cfg.factorOk, 0)} okay`);
+      setText('targetCashflow', cfg.cashflowMin >= 0 ? 'mind. 0 €' : `ab ${currency2(cfg.cashflowMin / 12)}/Monat`);
+
+      const scoreBadge = document.getElementById('scoreBadge');
+      scoreBadge.className = `badge ${scoreClass}`;
+      scoreBadge.innerHTML = scoreClass === 'good' ? 'Gut' : scoreClass === 'bad' ? 'Nein' : 'Prüfen';
+      document.getElementById('scoreTitle').textContent = scoreTitle;
+      document.getElementById('scoreText').textContent = scoreText;
+
+      let beerMatVerdict = 'Prüfen';
+      if (grossYield >= 6 && multiplier <= 20) beerMatVerdict = 'Stark';
+      else if (grossYield >= 5.5 && multiplier <= 23) beerMatVerdict = 'Okay';
+      else if (grossYield < 5 || multiplier > 25) beerMatVerdict = 'Schwach';
+
+      setText('pricePerSqm', sqm > 0 ? currency2(pricePerSqm) : '–');
+      setText('rentPerSqmTop', sqm > 0 ? number(rentPerSqm, 2) + ' €/qm' : '–');
+      setText('beerMatVerdict', beerMatVerdict);
+      setText('rentBase', currency2(coldRentMonthlyBase));
+      setText('rentUsed', currency2(coldRentMonthly));
+      setText('rentPerSqm', sqm > 0 ? number(rentPerSqm, 2) + ' €/qm' : '–');
+      setText('grossYield', percent(grossYield));
+      setText('multiplier', multiplier > 0 ? number(multiplier, 1) + 'x' : '–');
+      setText('ltv', percent(ltv));
+      setText('monthlyCashflowPreTax', currency2(annualCashflowPreTax / 12));
+      setText('monthlyCashflowAfterTax', currency2(annualCashflowAfterTax / 12));
+      setText('taxableResultAnnual', currency2(annualTaxableResult));
+      setText('breakEvenRent', currency2(breakEvenRent));
+      setText('rentIncreaseLegalHint', rentIncreaseLegalHint);
+      setText('dealGap', (breakEvenGap >= 0 ? '+' : '') + currency2(breakEvenGap));
+
+      setText('closingCosts', currency2(closingCosts));
+      setText('totalInvestment', currency2(totalInvestment));
+      setText('loanAmount', currency2(loanAmount));
+      setText('monthlyDebtService', currency2(monthlyDebtService));
+      setText('annualRent', currency2(annualRent));
+      setText('annualInterest', currency2(annualInterest));
+      setText('annualDeductibleCosts', currency2(annualDeductibleCosts));
+      setText('annualDepreciation', currency2(annualDepreciation));
+      setText('annualTaxableResult', currency2(annualTaxableResult));
+      setText('annualTaxEffect', currency2(annualTaxEffect));
+
+      document.getElementById('statusPills').innerHTML = pills.join('');
+      document.getElementById('analysisList').innerHTML = messages.map(m => `<li>${m}</li>`).join('');
+    }
+
+    document.getElementById('depreciationMode').addEventListener('change', (e) => {
+      document.getElementById('rulWrap').style.display = e.target.value === 'rul' ? 'block' : 'none';
+      calc();
+    });
+
+    document.getElementById('estimateRentBtn').addEventListener('click', () => {
+      estimateRent();
+      calc();
+    });
+
+    document.getElementById('rentIncreasePreset').addEventListener('change', () => {
+      applyRentIncreasePreset();
+      calc();
+    });
+
+    document.getElementById('capAreaMode').addEventListener('change', () => {
+      if (document.getElementById('rentIncreasePreset').value !== 'custom') {
+        applyRentIncreasePreset();
+      }
+      calc();
+    });
+
+    document.getElementById('calcBtn').addEventListener('click', calc);
+
+    document.getElementById('preset110Btn').addEventListener('click', () => {
+      document.getElementById('equity').value = '0';
+      document.getElementById('interestRate').value = '3.9';
+      document.getElementById('repaymentRate').value = '1.0';
+      document.getElementById('vacancyPercent').value = '3';
+      document.getElementById('rentIncreaseApplied').value = 'no';
+      calc();
+    });
+
+    document.getElementById('presetConservativeBtn').addEventListener('click', () => {
+      document.getElementById('interestRate').value = '4.0';
+      document.getElementById('repaymentRate').value = '2.0';
+      document.getElementById('vacancyPercent').value = '5';
+      document.getElementById('maintenanceMonthly').value = '75';
+      document.getElementById('rentIncreaseApplied').value = 'no';
+      calc();
+    });
+
+    [
+      'purchasePrice','brokerPercent','notaryPercent','equity','buildingShare','interestRate','repaymentRate',
+      'coldRentMonthly','nonApportionableMonthly','maintenanceMonthly','vacancyPercent','rentIncreasePercent',
+      'taxRate','remainingUsefulLife','state','rentIncreaseApplied','rentIncreaseMode','rentIncreaseYears','rentIncreasePreset','capAreaMode','zipCode','sqm','yearGroup','locationQuality','equipmentType','evaluationMode'
+    ].forEach(id => document.getElementById(id).addEventListener('input', calc));
+
+    stateSelect.addEventListener('change', calc);
+    calc();
+  </script>
+</body>
+</html>
