@@ -4,7 +4,7 @@
 
 Dieses Projekt wird von OpenClaw gesteuert.
 - Governance: light (kein Fastlane, kein UI-Review-Simulator)
-- Skills: `immobilien-deal-expert`, `systematic-debugging`, `writing-plans`, `requesting-code-review`, `brainstorming`, `ui-ux-pro-max`, `web-performance-optimization`, `accessibility-audit`
+- Skills: `react-vite-typescript`, `web-apple-design`, `openclaw-web-premium-ui`, `openclaw-design-system-kickoff`
 - `skills/` in diesem Repo ist ein synchronisierter Spiegel aus `Apps/ZZZ_OpenClaw/skills-source/` und wird nicht manuell gepflegt
 - Overlay: `Apps/ZZZ_OpenClaw/prompts/projects/immobilien-deal-checker.md`
 - Zentrale Projektübersicht: `Apps/ZZZ_OpenClaw/docs/project-hub.html` und `Apps/ZZZ_OpenClaw/docs/project-hub.txt`
