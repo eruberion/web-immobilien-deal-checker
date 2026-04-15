@@ -2,6 +2,14 @@
 
 Kleines Single-File-Webprojekt zur schnellen Plausibilitaetspruefung von Immobilien-Investments.
 
+## Monetarisierung & Premium-Roadmap
+
+- Detail-Roadmap: [`docs/PREMIUM_ROADMAP.md`](docs/PREMIUM_ROADMAP.md)
+- Zielmodell: **Freemium + Monatsabo + Jahresabo**
+- Preisempfehlung: **59,99 € / Jahr**
+- Monatsabo: **9,99 bis 12,99 €**
+- Kein Lifetime am Anfang, weil Saved Deals, Vergleich und laufende Verbesserungen eher zu Subscription passen
+
 ## Versionierung
 
 - SemVer fuer Releases: `MAJOR.MINOR.PATCH`
