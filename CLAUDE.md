@@ -1,4 +1,4 @@
-# Immobilien-Deal-Checker – Claude-Regeln
+# Immobilien-Deal-Checker – Agent Rules
 
 ## OpenClaw Governance
 
