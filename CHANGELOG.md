@@ -7,7 +7,7 @@ Versionierung: [Semantic Versioning](https://semver.org/lang/de/)
 
 ## [Unreleased]
 
-- Noch kein unreleased Eintrag.
+- `VERSION` als Repo-Level-SemVer-Quelle eingefuehrt; HTML-Meta und sichtbare Versionsanzeige bleiben Versionsspiegel.
 
 ## [0.11.0] - 2026-03-31
 

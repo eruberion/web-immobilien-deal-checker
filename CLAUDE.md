@@ -26,13 +26,13 @@ Kein Build-Step notwendig — Datei direkt im Browser öffnen.
 
 ## Versionierung
 
-- Source of Truth: `<meta name="app-version" content="x.y.z">` in `immobilien-deal-checker.html`
+- Source of Truth: `VERSION`; `<meta name="app-version" content="x.y.z">` und sichtbare Versionsanzeige in `immobilien-deal-checker.html` spiegeln denselben Wert.
 - Lokale Release-Historie: `CHANGELOG.md`
 - Format: `MAJOR.MINOR.PATCH` (SemVer)
 - `PATCH`: Bugfix, kleine Korrektur
 - `MINOR`: neues rueckwaertskompatibles Feature
 - `MAJOR`: Breaking Change / grundlegende Umstrukturierung
-- Bei jeder sichtbaren oder funktionalen Aenderung: Version im HTML-Meta-Tag + CHANGELOG.md aktualisieren
+- Bei jeder sichtbaren oder funktionalen Aenderung: `VERSION`, HTML-Meta-Tag, sichtbare Versionsanzeige und `CHANGELOG.md` aktualisieren.
 
 ## Dokumentations-Pflicht
 
