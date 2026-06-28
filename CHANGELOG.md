@@ -7,6 +7,7 @@ Versionierung: [Semantic Versioning](https://semver.org/lang/de/)
 
 ## [Unreleased]
 
+- `PRODUCT.md` als fachlicher Produkt-Steckbrief mit Scope, Grenzen, Erfolgskriterien und Advice-Boundary für Immobilien-Plausibilisierung ergänzt.
 - `VERSION` als Repo-Level-SemVer-Quelle eingefuehrt; HTML-Meta und sichtbare Versionsanzeige bleiben Versionsspiegel.
 
 ## [0.11.0] - 2026-03-31
