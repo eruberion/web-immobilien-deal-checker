@@ -50,6 +50,10 @@ Bei **jeder Änderung** müssen aktualisiert werden:
 - **Keine externen Dependencies**: Keine CDN-Scripts ohne explizite Freigabe.
 - **Kein Push auf `main`**.
 
+## Projekt-Closeout
+
+Vor Abschluss relevanter Arbeit das Workspace-Runbook `/Users/ai/.openclaw/workspace/workspace-docs/operations/PROJECT-CLOSEOUT-RUNBOOK.md` beachten. Mindestens pruefen: passende QS, Projekt-Doku, `CHANGELOG.md`, `VERSION` samt Spiegeln, zentrale Workspace-Doku bei Betriebs-/Statusaenderungen und Doku-Sync/Validatoren nach Markdown-Aenderungen.
+
 ## Dateistruktur
 
 ```
