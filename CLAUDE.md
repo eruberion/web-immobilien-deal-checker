@@ -52,7 +52,7 @@ Bei **jeder Änderung** müssen aktualisiert werden:
 
 ## Projekt-Closeout
 
-Vor Abschluss relevanter Arbeit das Workspace-Runbook `/Users/ai/.openclaw/workspace/workspace-docs/operations/PROJECT-CLOSEOUT-RUNBOOK.md` beachten. Mindestens pruefen: passende QS, Projekt-Doku, `CHANGELOG.md`, `VERSION` samt Spiegeln, zentrale Workspace-Doku bei Betriebs-/Statusaenderungen und Doku-Sync/Validatoren nach Markdown-Aenderungen.
+Vor Abschluss relevanter Arbeit das workspace-relative Runbook `Apps/finn-workspace/workspace-docs/operations/PROJECT-CLOSEOUT-RUNBOOK.md` beachten. Den Workspace-Root ueber `DEV_WORKSPACE_ROOT` oder die lokale OpenClaw-Projektaufloesung bestimmen. Mindestens pruefen: passende QS, Projekt-Doku, `CHANGELOG.md`, `VERSION` samt Spiegeln, zentrale Workspace-Doku bei Betriebs-/Statusaenderungen und Doku-Sync/Validatoren nach Markdown-Aenderungen.
 
 ## Dateistruktur
 
