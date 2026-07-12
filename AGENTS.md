@@ -4,7 +4,7 @@
 
 Dieses Projekt wird von OpenClaw gesteuert.
 - Governance: light (kein Fastlane, kein UI-Review-Simulator)
-- Skills: `react-vite-typescript`, `web-apple-design`, `openclaw-web-premium-ui`, `openclaw-design-system-kickoff`
+- Skills: `react-vite-typescript`, `web-apple-design`, `openclaw-web-premium-ui`, `openclaw-design-system-kickoff`, `immobilien-deal-expert`
 - `skills/` in diesem Repo ist ein synchronisierter Spiegel aus `Apps/ZZZ_OpenClaw/skills-source/` und wird nicht manuell gepflegt
 - Overlay: `Apps/ZZZ_OpenClaw/prompts/projects/immobilien-deal-checker.md`
 - Zentrale Projektübersicht: `Apps/ZZZ_OpenClaw/docs/project-hub.html` und `Apps/ZZZ_OpenClaw/docs/project-hub.txt`

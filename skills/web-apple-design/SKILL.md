@@ -9,6 +9,10 @@ description: Apple Design Language for web applications. Use when building UI, c
 
 Translates Apple's Human Interface Guidelines design philosophy into web-appropriate patterns using Tailwind CSS. Ensures visual consistency across iOS apps and web projects.
 
+Use HIG as a clarity and interaction reference, not as a visual imitation.
+Project-specific design systems, tokens, accessibility rules and domain skills
+take precedence over every default below.
+
 ## When To Apply
 
 Apply when the agent:
@@ -22,26 +26,25 @@ Apply when the agent:
 ## Design Principles
 
 ### Typography
-- Font: Inter (primary), system-ui fallback
+- Font: follow the project typography; prefer local/system delivery for
+  privacy-sensitive products
 - Code: JetBrains Mono
-- Sizes follow Apple's type scale:
-  - Page title: `text-3xl font-bold` (28px)
+- Example sizes when the project has no established scale:
+  - Page title: `text-3xl font-bold`
   - Section heading: `text-xl font-semibold` (20px)
   - Body: `text-base` (16px)
   - Caption: `text-sm text-muted` (14px)
 - Line height: 1.5-1.6 for body text
 
 ### Colors (CSS Custom Properties)
-- Background: `--bg-page`, `--bg-secondary`, `--bg-card`
-- Text: `--text-heading`, `--text-body`, `--text-secondary`, `--text-muted`
-- Accents: `--blue`, `--green`, `--orange`, `--red`, `--purple`
-- Each accent has a `-bg` variant for subtle backgrounds
-- Borders: `--border` (subtle), `--border-strong` (visible)
+- Reuse existing semantic CSS custom properties for background, surface,
+  border, text, muted text, accent, warning, success and danger
+- Do not introduce a second token vocabulary into an established project
+- Preserve the project's accent color; do not default to Apple blue
 
 ### Dark Mode
-- Dark-first approach
-- Toggle between light/dark with `[data-theme="dark"]`
-- Store preference in localStorage, respect system preference
+- Follow the project's existing light/dark default and selector strategy
+- Respect system preference where that matches the product decision
 - All colors must work in both modes
 
 ### Spacing & Layout
@@ -54,7 +57,7 @@ Apply when the agent:
 ### Components
 - **Cards**: White/dark background, subtle shadow, rounded corners, no heavy borders
 - **Badges**: Small, colored background with matching text (`bg-green-bg text-green`)
-- **Buttons**: Primary blue, rounded, no heavy borders
+- **Buttons**: Existing project accent, clear states, rounded where established
 - **Tables**: Clean, minimal borders, alternating row backgrounds optional
 - **Navigation**: Sidebar on desktop (fixed), collapsible on mobile
 
@@ -64,9 +67,16 @@ Apply when the agent:
 - Dark mode: stronger shadows with higher opacity
 
 ### Animations
-- Transitions: `transition-all duration-200 ease`
+- Transition only the required properties; avoid `transition-all`
 - Hover states: subtle opacity or background change
 - No flashy animations — Apple-style restraint
+- Respect `prefers-reduced-motion`
+
+### Accessibility
+- Target WCAG 2.2 AA
+- Preserve visible focus, keyboard operation and semantic names
+- Use at least 44 x 44 CSS-pixel touch targets for primary interactions
+- Never communicate status by color alone
 
 ## Anti-Patterns
 - No heavy borders or outlines on cards
@@ -74,3 +84,4 @@ Apply when the agent:
 - No more than 2-3 colors per section
 - No decorative elements without purpose
 - No custom scrollbars unless essential
+- No Apple trademark, product-page or platform imitation
