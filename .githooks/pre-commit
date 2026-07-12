@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+WORKSPACE_ROOT="$(cd "$REPO_ROOT/../.." && pwd)"
+OPENCLAW_HOOK="$WORKSPACE_ROOT/Apps/ZZZ_OpenClaw/.githooks/pre-commit"
+INSTALL_SCRIPT="$WORKSPACE_ROOT/Apps/ZZZ_OpenClaw/scripts/install_workspace_git_hooks.sh"
+
+if [[ ! -x "$OPENCLAW_HOOK" ]]; then
+  echo "[policy-sync] missing shared hook: $OPENCLAW_HOOK"
+  echo "[policy-sync] run $INSTALL_SCRIPT to restore."
+  exit 1
+fi
+
+exec "$OPENCLAW_HOOK" "$@"
+
