@@ -1,0 +1,4 @@
+interface:
+  display_name: "Immobilien Deal Expert"
+  short_description: "Fachregeln fuer Immobilien-Investitionsrechnungen"
+  default_prompt: "Nutze $immobilien-deal-expert, um Immobilienrechnungen fachlich, nachvollziehbar und sicher zu pruefen."

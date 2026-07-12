@@ -4,7 +4,7 @@
 
 Dieses Projekt wird von OpenClaw gesteuert.
 - Governance: light (kein Fastlane, kein UI-Review-Simulator)
-- Skills: `react-vite-typescript`, `web-apple-design`, `openclaw-web-premium-ui`, `openclaw-design-system-kickoff`
+- Skills: `react-vite-typescript`, `web-apple-design`, `openclaw-web-premium-ui`, `openclaw-design-system-kickoff`, `immobilien-deal-expert`
 - `skills/` in diesem Repo ist ein synchronisierter Spiegel aus `Apps/ZZZ_OpenClaw/skills-source/` und wird nicht manuell gepflegt
 - Overlay: `Apps/ZZZ_OpenClaw/prompts/projects/immobilien-deal-checker.md`
 - Zentrale Projektübersicht: `Apps/ZZZ_OpenClaw/docs/project-hub.html` und `Apps/ZZZ_OpenClaw/docs/project-hub.txt`
@@ -52,7 +52,7 @@ Bei **jeder Änderung** müssen aktualisiert werden:
 
 ## Projekt-Closeout
 
-Vor Abschluss relevanter Arbeit das Workspace-Runbook `/Users/ai/.openclaw/workspace/workspace-docs/operations/PROJECT-CLOSEOUT-RUNBOOK.md` beachten. Mindestens pruefen: passende QS, Projekt-Doku, `CHANGELOG.md`, `VERSION` samt Spiegeln, zentrale Workspace-Doku bei Betriebs-/Statusaenderungen und Doku-Sync/Validatoren nach Markdown-Aenderungen.
+Vor Abschluss relevanter Arbeit das workspace-relative Runbook `Apps/finn-workspace/workspace-docs/operations/PROJECT-CLOSEOUT-RUNBOOK.md` beachten. Den Workspace-Root ueber `DEV_WORKSPACE_ROOT` oder die lokale OpenClaw-Projektaufloesung bestimmen. Mindestens pruefen: passende QS, Projekt-Doku, `CHANGELOG.md`, `VERSION` samt Spiegeln, zentrale Workspace-Doku bei Betriebs-/Statusaenderungen und Doku-Sync/Validatoren nach Markdown-Aenderungen.
 
 ## Dateistruktur
 
