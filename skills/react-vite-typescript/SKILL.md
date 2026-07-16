@@ -9,9 +9,6 @@ description: Development rules for React + Vite + TypeScript web projects. Use w
 
 Use this skill to write correct, maintainable, and performant React web applications using Vite as build tool, TypeScript in strict mode, and Tailwind CSS for styling.
 
-Project-specific `AGENTS.md`, overlays, domain skills, existing architecture and
-design tokens take precedence over defaults in this generic skill.
-
 ## When To Apply
 
 Apply when the agent:
@@ -38,7 +35,7 @@ MEDIUM:
 - New dependency additions
 
 LOW:
-- UI component changes that do not affect trust-critical flows
+- UI component changes
 - Styling adjustments
 - Test additions
 
@@ -52,7 +49,7 @@ LOW:
 
 ### Components
 - One component per file
-- Prefer named exports; existing route/page conventions may use default exports
+- Named exports only (no default exports)
 - Props interfaces co-located or in `src/types/`
 - Use functional components with hooks
 - Prefer composition over prop drilling
@@ -60,18 +57,13 @@ LOW:
 ### State Management
 - Zustand for global/persistent state
 - React hooks (`useState`, `useReducer`) for local component state
-- Use browser persistence only when the project data classification permits it
-- Never persist authentication tokens, session IDs, refresh tokens, passwords,
-  private keys, or equivalent credentials in `localStorage`/`sessionStorage`
-- Validate persisted and imported state before use
+- localStorage persistence via Zustand middleware where needed
 
 ### Styling
 - Tailwind CSS v4 utility classes
-- Follow the project's existing dark-mode strategy (`dark:`, class, media query,
-  or `data-theme`); do not mix strategies without an explicit migration
+- Dark mode via `dark:` prefix (dark-first design)
 - No inline styles unless dynamic values require them
-- Follow established project tokens; framework defaults are only fallback
-- Respect `prefers-reduced-motion` and use explicit transition properties
+- Apple Design Tokens where established in the project
 
 ### Build & Dev
 - Vite dev server with HMR
@@ -82,9 +74,7 @@ LOW:
 ### Testing
 - Vitest for unit tests
 - Tests in `__tests__/` directories or `*.test.ts` files
-- Prioritize business logic and calculations
-- Add integration/UI tests for critical auth, payment, persistence, import,
-  deletion, accessibility, and routing flows when behavior crosses layers
+- Test business logic and calculations, not UI rendering details
 
 ### File Structure
 ```
@@ -104,8 +94,7 @@ src/
 Before completing any task:
 - [ ] No TypeScript errors (`npm run type-check` or build)
 - [ ] No `any` types introduced
-- [ ] Export style follows the project convention
+- [ ] Components use named exports
 - [ ] New dependencies justified and minimal
 - [ ] Responsive design considered (mobile + desktop)
-- [ ] Existing theme strategy works in all visible states
-- [ ] Sensitive persistence and trust boundaries reviewed
+- [ ] Dark mode classes applied where visible

@@ -14,9 +14,6 @@ This skill is a curation layer, not a replacement for:
 - `react-vite-typescript`
 - `web-apple-design`
 
-Project overlays, domain skills and an established design system always take
-precedence over this curation layer.
-
 Default output language follows the user request language.
 
 ## When To Apply
@@ -80,7 +77,6 @@ For finance-adjacent or analytics-heavy screens:
   - page-entry
   - staggered reveal
   - section emphasis
-- Disable non-essential motion for `prefers-reduced-motion`
 - Typography should feel chosen, not accidental.
 - Components should look related across the page, not copied from mixed libraries.
 
@@ -91,8 +87,6 @@ For finance-adjacent or analytics-heavy screens:
 - Do not reduce contrast, tap targets, or responsive behavior for style.
 - Do not add decorative motion to critical actions or forms.
 - Do not overuse gradients, glass, or blur where they hurt legibility.
-- Target WCAG 2.2 AA; premium finish never weakens focus, contrast, target
-  size, keyboard behavior or accessible authentication.
 
 ## Project Fit
 
