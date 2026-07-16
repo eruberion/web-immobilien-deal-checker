@@ -19,6 +19,9 @@ This skill helps turn vague taste goals into a usable system:
 
 It is for kickoff and alignment, not for endless design theorizing.
 
+Project overlays, domain guardrails and an established design system take
+precedence. Do not invoke this skill for routine component maintenance.
+
 Default output language follows the user request language.
 
 ## When To Apply
@@ -46,6 +49,8 @@ Apply when:
    - radii
    - elevation
    - motion stance
+   - WCAG 2.2 AA accessibility target
+   - privacy/security constraints for trust-sensitive products
 4. Define the minimum viable component family:
    - page shells
    - cards
@@ -78,7 +83,7 @@ Prefer outputs in this shape:
 This skill often comes before:
 
 - `openclaw-web-premium-ui`
-- `openclaw-ios-ui-curation`
+- the applicable platform-specific UI skill
 
 It should also respect existing OpenClaw guardrails for:
 
