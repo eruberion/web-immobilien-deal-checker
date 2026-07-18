@@ -1,0 +1,97 @@
+{
+  ".githooks/pre-commit": {
+    "mtime": 1784363839.716867,
+    "ast_hash": "56eda773a1a7fcd90649c41aaec56b38",
+    "semantic_hash": "56eda773a1a7fcd90649c41aaec56b38"
+  },
+  ".githooks/pre-push": {
+    "mtime": 1784363839.7170632,
+    "ast_hash": "349a1075656746e04b92be30319d4853",
+    "semantic_hash": "349a1075656746e04b92be30319d4853"
+  },
+  "AGENTS.md": {
+    "mtime": 1784363839.7176783,
+    "ast_hash": "427cd2122e67113b391282aa98a0af82",
+    "semantic_hash": "427cd2122e67113b391282aa98a0af82"
+  },
+  "CHANGELOG.md": {
+    "mtime": 1784364226.1292112,
+    "ast_hash": "096af18ea6765fa635917cdb23c8c99d",
+    "semantic_hash": "096af18ea6765fa635917cdb23c8c99d"
+  },
+  "CLAUDE.md": {
+    "mtime": 1784363839.718057,
+    "ast_hash": "427cd2122e67113b391282aa98a0af82",
+    "semantic_hash": "427cd2122e67113b391282aa98a0af82"
+  },
+  "DEPLOYMENT.md": {
+    "mtime": 1784363839.718662,
+    "ast_hash": "e56bd6dbd6c257786c4f4c317f081fe1",
+    "semantic_hash": "e56bd6dbd6c257786c4f4c317f081fe1"
+  },
+  "DESIGN.md": {
+    "mtime": 1784363839.7191458,
+    "ast_hash": "02fedebef5265e2b8dc91724a32cef50",
+    "semantic_hash": "02fedebef5265e2b8dc91724a32cef50"
+  },
+  "FALLBACK.md": {
+    "mtime": 1784363839.7194352,
+    "ast_hash": "d624ac0a68e7d86936feeb9efdf83500",
+    "semantic_hash": "d624ac0a68e7d86936feeb9efdf83500"
+  },
+  "PRODUCT.md": {
+    "mtime": 1784363839.7198212,
+    "ast_hash": "0b61c05ef05a2b817b8db70228f5005d",
+    "semantic_hash": "0b61c05ef05a2b817b8db70228f5005d"
+  },
+  "README.md": {
+    "mtime": 1784364226.1288452,
+    "ast_hash": "861a45088fc3be5a279adb05c62d2571",
+    "semantic_hash": "861a45088fc3be5a279adb05c62d2571"
+  },
+  "docs/PREMIUM_ROADMAP.md": {
+    "mtime": 1784363839.7209108,
+    "ast_hash": "99cebbe386fd94d6d6bface39136da97",
+    "semantic_hash": "99cebbe386fd94d6d6bface39136da97"
+  },
+  "docs/RESTORE_QA_2026-07-18.md": {
+    "mtime": 1784365075.004365,
+    "ast_hash": "c315afc2248ca24940448def34960734",
+    "semantic_hash": "c315afc2248ca24940448def34960734"
+  },
+  "immobilien-deal-checker.html": {
+    "mtime": 1784364151.0353513,
+    "ast_hash": "f57a3a8566171491e674be9ccbad48db",
+    "semantic_hash": "f57a3a8566171491e674be9ccbad48db"
+  },
+  "skills/immobilien-deal-expert/SKILL.md": {
+    "mtime": 1784363839.7214756,
+    "ast_hash": "f1bcfab24853bae3a8ba5cac7a3f843f",
+    "semantic_hash": "f1bcfab24853bae3a8ba5cac7a3f843f"
+  },
+  "skills/immobilien-deal-expert/agents/openai.yaml": {
+    "mtime": 1784363839.721753,
+    "ast_hash": "4430f38abdaf6d7fe84da0f6af64953b",
+    "semantic_hash": "4430f38abdaf6d7fe84da0f6af64953b"
+  },
+  "skills/openclaw-design-system-kickoff/SKILL.md": {
+    "mtime": 1784363839.7220929,
+    "ast_hash": "a10fb4fe0f16c3ca7774cbc340475d31",
+    "semantic_hash": "a10fb4fe0f16c3ca7774cbc340475d31"
+  },
+  "skills/openclaw-web-premium-ui/SKILL.md": {
+    "mtime": 1784363839.722435,
+    "ast_hash": "3c1d044d1b87a4dad480ebc5c4dec4e6",
+    "semantic_hash": "3c1d044d1b87a4dad480ebc5c4dec4e6"
+  },
+  "skills/react-vite-typescript/SKILL.md": {
+    "mtime": 1784363839.722743,
+    "ast_hash": "2fc60156ced7522f5125ac8f0b3e99a7",
+    "semantic_hash": "2fc60156ced7522f5125ac8f0b3e99a7"
+  },
+  "skills/web-apple-design/SKILL.md": {
+    "mtime": 1784363839.7230952,
+    "ast_hash": "c709e49708e8c19920ada029c62d48b8",
+    "semantic_hash": "c709e49708e8c19920ada029c62d48b8"
+  }
+}

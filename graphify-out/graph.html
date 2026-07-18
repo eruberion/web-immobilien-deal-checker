@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>graphify - graphify-out/graph.html</title>
+<script src="https://unpkg.com/vis-network@9.1.6/standalone/umd/vis-network.min.js"
+        integrity="sha384-Ux6phic9PEHJ38YtrijhkzyJ8yQlH8i/+buBR8s3mAZOJrP1gwyvAcIYl3GWtpX1"
+        crossorigin="anonymous"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0f0f1a; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; display: flex; height: 100vh; overflow: hidden; }
+  #graph { flex: 1; }
+  #sidebar { width: 280px; background: #1a1a2e; border-left: 1px solid #2a2a4e; display: flex; flex-direction: column; overflow: hidden; }
+  #search-wrap { padding: 12px; border-bottom: 1px solid #2a2a4e; }
+  #search { width: 100%; background: #0f0f1a; border: 1px solid #3a3a5e; color: #e0e0e0; padding: 7px 10px; border-radius: 6px; font-size: 13px; outline: none; }
+  #search:focus { border-color: #4E79A7; }
+  #search-results { max-height: 140px; overflow-y: auto; padding: 4px 12px; border-bottom: 1px solid #2a2a4e; display: none; }
+  .search-item { padding: 4px 6px; cursor: pointer; border-radius: 4px; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .search-item:hover { background: #2a2a4e; }
+  #info-panel { padding: 14px; border-bottom: 1px solid #2a2a4e; min-height: 140px; }
+  #info-panel h3 { font-size: 13px; color: #aaa; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+  #info-content { font-size: 13px; color: #ccc; line-height: 1.6; }
+  #info-content .field { margin-bottom: 5px; }
+  #info-content .field b { color: #e0e0e0; }
+  #info-content .empty { color: #555; font-style: italic; }
+  .neighbor-link { display: block; padding: 2px 6px; margin: 2px 0; border-radius: 3px; cursor: pointer; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-left: 3px solid #333; }
+  .neighbor-link:hover { background: #2a2a4e; }
+  #neighbors-list { max-height: 160px; overflow-y: auto; margin-top: 4px; }
+  #legend-wrap { flex: 1; overflow-y: auto; padding: 12px; }
+  #legend-wrap h3 { font-size: 13px; color: #aaa; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .legend-item { display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; border-radius: 4px; font-size: 12px; }
+  .legend-item:hover { background: #2a2a4e; padding-left: 4px; }
+  .legend-item.dimmed { opacity: 0.35; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+  .legend-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .legend-count { color: #666; font-size: 11px; }
+  #stats { padding: 10px 14px; border-top: 1px solid #2a2a4e; font-size: 11px; color: #555; }
+  #legend-controls { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding: 4px 0; }
+  #legend-controls label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 12px; color: #aaa; user-select: none; }
+  #legend-controls label:hover { color: #e0e0e0; }
+  .legend-cb, #select-all-cb { appearance: none; -webkit-appearance: none; width: 14px; height: 14px; border: 1.5px solid #3a3a5e; border-radius: 3px; background: #0f0f1a; cursor: pointer; position: relative; flex-shrink: 0; }
+  .legend-cb:checked, #select-all-cb:checked { background: #4E79A7; border-color: #4E79A7; }
+  .legend-cb:checked::after, #select-all-cb:checked::after { content: ''; position: absolute; left: 3.5px; top: 1px; width: 4px; height: 7px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+  #select-all-cb:indeterminate { background: #4E79A7; border-color: #4E79A7; }
+  #select-all-cb:indeterminate::after { content: ''; position: absolute; left: 2px; top: 5px; width: 8px; height: 2px; background: #fff; border: none; transform: none; }
+</style>
+</head>
+<body>
+<div id="graph"></div>
+<div id="sidebar">
+  <div id="search-wrap">
+    <input id="search" type="text" placeholder="Search nodes..." autocomplete="off">
+    <div id="search-results"></div>
+  </div>
+  <div id="info-panel">
+    <h3>Node Info</h3>
+    <div id="info-content"><span class="empty">Click a node to inspect it</span></div>
+  </div>
+  <div id="legend-wrap">
+    <h3>Communities</h3>
+    <div id="legend-controls">
+      <label><input type="checkbox" id="select-all-cb" checked onchange="toggleAllCommunities(!this.checked)">Select All</label>
+    </div>
+    <div id="legend"></div>
+  </div>
+  <div id="stats">53 nodes &middot; 79 edges &middot; 9 communities</div>
+</div>
+<script>
+const RAW_NODES = [{"id": "githooks_pre_commit", "label": "pre-commit", "color": {"background": "#FF9DA7", "border": "#FF9DA7", "highlight": {"background": "#ffffff", "border": "#FF9DA7"}}, "size": 12.7, "font": {"size": 0, "color": "#ffffff"}, "title": "pre-commit", "community": 7, "community_name": "Pre-Commit Hook", "source_file": ".githooks/pre-commit", "file_type": "code", "degree": 1}, {"id": "githooks_pre_commit__entry", "label": "pre-commit script", "color": {"background": "#FF9DA7", "border": "#FF9DA7", "highlight": {"background": "#ffffff", "border": "#FF9DA7"}}, "size": 12.7, "font": {"size": 0, "color": "#ffffff"}, "title": "pre-commit script", "community": 7, "community_name": "Pre-Commit Hook", "source_file": ".githooks/pre-commit", "file_type": "code", "degree": 1}, {"id": "githooks_pre_push", "label": "pre-push", "color": {"background": "#9C755F", "border": "#9C755F", "highlight": {"background": "#ffffff", "border": "#9C755F"}}, "size": 12.7, "font": {"size": 0, "color": "#ffffff"}, "title": "pre-push", "community": 8, "community_name": "Pre-Push Hook", "source_file": ".githooks/pre-push", "file_type": "code", "degree": 1}, {"id": "githooks_pre_push__entry", "label": "pre-push script", "color": {"background": "#9C755F", "border": "#9C755F", "highlight": {"background": "#ffffff", "border": "#9C755F"}}, "size": 12.7, "font": {"size": 0, "color": "#ffffff"}, "title": "pre-push script", "community": 8, "community_name": "Pre-Push Hook", "source_file": ".githooks/pre-push", "file_type": "code", "degree": 1}, {"id": "agents_project_governance", "label": "Immobilien Deal Checker Agent Governance", "color": {"background": "#F28E2B", "border": "#F28E2B", "highlight": {"background": "#ffffff", "border": "#F28E2B"}}, "size": 40.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Immobilien Deal Checker Agent Governance", "community": 1, "community_name": "Governance and Skills", "source_file": "AGENTS.md", "file_type": "document", "degree": 11}, {"id": "agents_client_only_architecture", "label": "Client-Only Architecture", "color": {"background": "#4E79A7", "border": "#4E79A7", "highlight": {"background": "#ffffff", "border": "#4E79A7"}}, "size": 18.2, "font": {"size": 12, "color": "#ffffff"}, "title": "Client-Only Architecture", "community": 0, "community_name": "Client-Only Calculations", "source_file": "AGENTS.md", "file_type": "concept", "degree": 3}, {"id": "agents_single_file_principle", "label": "Single-File Principle", "color": {"background": "#4E79A7", "border": "#4E79A7", "highlight": {"background": "#ffffff", "border": "#4E79A7"}}, "size": 20.9, "font": {"size": 12, "color": "#ffffff"}, "title": "Single-File Principle", "community": 0, "community_name": "Client-Only Calculations", "source_file": "AGENTS.md", "file_type": "concept", "degree": 4}, {"id": "agents_versioning_contract", "label": "Version Mirror Contract", "color": {"background": "#F28E2B", "border": "#F28E2B", "highlight": {"background": "#ffffff", "border": "#F28E2B"}}, "size": 15.5, "font": {"size": 12, "color": "#ffffff"}, "title": "Version Mirror Contract", "community": 1, "community_name": "Governance and Skills", "source_file": "AGENTS.md", "file_type": "rationale", "degree": 2}, {"id": "changelog_release_history", "label": "Release History", "color": {"background": "#E15759", "border": "#E15759", "highlight": {"background": "#ffffff", "border": "#E15759"}}, "size": 26.4, "font": {"size": 12, "color": "#ffffff"}, "title": "Release History", "community": 2, "community_name": "Release and Deployment", "source_file": "CHANGELOG.md", "file_type": "document", "degree": 6}, {"id": "changelog_keep_a_changelog", "label": "Keep a Changelog", "color": {"background": "#E15759", "border": "#E15759", "highlight": {"background": "#ffffff", "border": "#E15759"}}, "size": 12.7, "font": {"size": 0, "color": "#ffffff"}, "title": "Keep a Changelog", "community": 2, "community_name": "Release and Deployment", "source_file": "CHANGELOG.md", "file_type": "concept", "degree": 1}, {"id": "changelog_semantic_versioning", "label": "Semantic Versioning", "color": {"background": "#E15759", "border": "#E15759", "highlight": {"background": "#ffffff", "border": "#E15759"}}, "size": 15.5, "font": {"size": 12, "color": "#ffffff"}, "title": "Semantic Versioning", "community": 2, "community_name": "Release and Deployment", "source_file": "CHANGELOG.md", "file_type": "concept", "degree": 2}, {"id": "changelog_restore_release", "label": "Version 0.11.1 Restore Release", "color": {"background": "#EDC948", "border": "#EDC948", "highlight": {"background": "#ffffff", "border": "#EDC948"}}, "size": 18.2, "font": {"size": 12, "color": "#ffffff"}, "title": "Version 0.11.1 Restore Release", "community": 5, "community_name": "Product Release Scope", "source_file": "CHANGELOG.md", "file_type": "rationale", "degree": 3}, {"id": "claude_project_governance", "label": "Immobilien Deal Checker Claude Governance", "color": {"background": "#F28E2B", "border": "#F28E2B", "highlight": {"background": "#ffffff", "border": "#F28E2B"}}, "size": 23.6, "font": {"size": 12, "color": "#ffffff"}, "title": "Immobilien Deal Checker Claude Governance", "community": 1, "community_name": "Governance and Skills", "source_file": "CLAUDE.md", "file_type": "document", "degree": 5}, {"id": "deployment_deployment_plan", "label": "Deployment Plan", "color": {"background": "#E15759", "border": "#E15759", "highlight": {"background": "#ffffff", "border": "#E15759"}}, "size": 18.2, "font": {"size": 12, "color": "#ffffff"}, "title": "Deployment Plan", "community": 2, "community_name": "Release and Deployment", "source_file": "DEPLOYMENT.md", "file_type": "document", "degree": 3}, {"id": "deployment_static_hosting_options", "label": "Static Hosting Options", "color": {"background": "#E15759", "border": "#E15759", "highlight": {"background": "#ffffff", "border": "#E15759"}}, "size": 12.7, "font": {"size": 0, "color": "#ffffff"}, "title": "Static Hosting Options", "community": 2, "community_name": "Release and Deployment", "source_file": "DEPLOYMENT.md", "file_type": "concept", "degree": 1}, {"id": "design_visual_direction", "label": "Product Visual Direction", "color": {"background": "#76B7B2", "border": "#76B7B2", "highlight": {"background": "#ffffff", "border": "#76B7B2"}}, "size": 23.6, "font": {"size": 12, "color": "#ffffff"}, "title": "Product Visual Direction", "community": 3, "community_name": "Trust-Centered Design", "source_file": "DESIGN.md", "file_type": "document", "degree": 5}, {"id": "design_analysis_tool_thesis", "label": "Analysis Tool Over Marketing Skin", "color": {"background": "#76B7B2", "border": "#76B7B2", "highlight": {"background": "#ffffff", "border": "#76B7B2"}}, "size": 20.9, "font": {"size": 12, "color": "#ffffff"}, "title": "Analysis Tool Over Marketing Skin", "community": 3, "community_name": "Trust-Centered Design", "source_file": "DESIGN.md", "file_type": "rationale", "degree": 4}, {"id": "design_clarity_over_animation", "label": "Clarity Over Animation", "color": {"background": "#76B7B2", "border": "#76B7B2", "highlight": {"background": "#ffffff", "border": "#76B7B2"}}, "size": 18.2, "font": {"size": 12, "color": "#ffffff"}, "title": "Clarity Over Animation", "community": 3, "community_name": "Trust-Centered Design", "source_file": "DESIGN.md", "file_type": "rationale", "degree": 3}, {"id": "fallback_recovery_plan", "label": "Static Application Recovery Plan", "color": {"background": "#4E79A7", "border": "#4E79A7", "highlight": {"background": "#ffffff", "border": "#4E79A7"}}, "size": 15.5, "font": {"size": 12, "color": "#ffffff"}, "title": "Static Application Recovery Plan", "community": 0, "community_name": "Client-Only Calculations", "source_file": "FALLBACK.md", "file_type": "document", "degree": 2}, {"id": "fallback_single_file_recovery", "label": "Single-File Recovery Mechanism", "color": {"background": "#4E79A7", "border": "#4E79A7", "highlight": {"background": "#ffffff", "border": "#4E79A7"}}, "size": 15.5, "font": {"size": 12, "color": "#ffffff"}, "title": "Single-File Recovery Mechanism", "community": 0, "community_name": "Client-Only Calculations", "source_file": "FALLBACK.md", "file_type": "rationale", "degree": 2}, {"id": "product_product_brief", "label": "Immobilien Deal Checker Product Brief", "color": {"background": "#EDC948", "border": "#EDC948", "highlight": {"background": "#ffffff", "border": "#EDC948"}}, "size": 20.9, "font": {"size": 12, "color": "#ffffff"}, "title": "Immobilien Deal Checker Product Brief", "community": 5, "community_name": "Product Release Scope", "source_file": "PRODUCT.md", "file_type": "document", "degree": 4}, {"id": "product_advice_boundary", "label": "Analysis Tool Advice Boundary", "color": {"background": "#B07AA1", "border": "#B07AA1", "highlight": {"background": "#ffffff", "border": "#B07AA1"}}, "size": 15.5, "font": {"size": 12, "color": "#ffffff"}, "title": "Analysis Tool Advice Boundary", "community": 6, "community_name": "Advice Boundary", "source_file": "PRODUCT.md", "file_type": "rationale", "degree": 2}, {"id": "product_success_criteria", "label": "Product Success Criteria", "color": {"background": "#EDC948", "border": "#EDC948", "highlight": {"background": "#ffffff", "border": "#EDC948"}}, "size": 15.5, "font": {"size": 12, "color": "#ffffff"}, "title": "Product Success Criteria", "community": 5, "community_name": "Product Release Scope", "source_file": "PRODUCT.md", "file_type": "concept", "degree": 2}, {"id": "readme_project_overview", "label": "Immobilien Deal Checker Overview", "color": {"background": "#E15759", "border": "#E15759", "highlight": {"background": "#ffffff", "border": "#E15759"}}, "size": 26.4, "font": {"size": 12, "color": "#ffffff"}, "title": "Immobilien Deal Checker Overview", "community": 2, "community_name": "Release and Deployment", "source_file": "README.md", "file_type": "document", "degree": 6}, {"id": "docs_premium_roadmap_monetization_roadmap", "label": "Premium Monetization Roadmap", "color": {"background": "#59A14F", "border": "#59A14F", "highlight": {"background": "#ffffff", "border": "#59A14F"}}, "size": 20.9, "font": {"size": 12, "color": "#ffffff"}, "title": "Premium Monetization Roadmap", "community": 4, "community_name": "Premium Roadmap", "source_file": "docs/PREMIUM_ROADMAP.md", "file_type": "document", "degree": 4}, {"id": "docs_premium_roadmap_freemium_subscription", "label": "Freemium Subscription Model", "color": {"background": "#59A14F", "border": "#59A14F", "highlight": {"background": "#ffffff", "border": "#59A14F"}}, "size": 15.5, "font": {"size": 12, "color": "#ffffff"}, "title": "Freemium Subscription Model", "community": 4, "community_name": "Premium Roadmap", "source_file": "docs/PREMIUM_ROADMAP.md", "file_type": "concept", "degree": 2}, {"id": "docs_premium_roadmap_premium_feature_set", "label": "Save Compare Export Premium Core", "color": {"background": "#59A14F", "border": "#59A14F", "highlight": {"background": "#ffffff", "border": "#59A14F"}}, "size": 15.5, "font": {"size": 12, "color": "#ffffff"}, "title": "Save Compare Export Premium Core", "community": 4, "community_name": "Premium Roadmap", "source_file": "docs/PREMIUM_ROADMAP.md", "file_type": "concept", "degree": 2}, {"id": "docs_premium_roadmap_subscription_rationale", "label": "Search-Phase Subscription Rationale", "color": {"background": "#59A14F", "border": "#59A14F", "highlight": {"background": "#ffffff", "border": "#59A14F"}}, "size": 12.7, "font": {"size": 0, "color": "#ffffff"}, "title": "Search-Phase Subscription Rationale", "community": 4, "community_name": "Premium Roadmap", "source_file": "docs/PREMIUM_ROADMAP.md", "file_type": "rationale", "degree": 1}, {"id": "docs_restore_qa_2026_07_18_restore_qa_report", "label": "Restore QA Report 2026-07-18", "color": {"background": "#E15759", "border": "#E15759", "highlight": {"background": "#ffffff", "border": "#E15759"}}, "size": 23.6, "font": {"size": 12, "color": "#ffffff"}, "title": "Restore QA Report 2026-07-18", "community": 2, "community_name": "Release and Deployment", "source_file": "docs/RESTORE_QA_2026-07-18.md", "file_type": "document", "degree": 5}, {"id": "docs_restore_qa_2026_07_18_restore_test_matrix", "label": "Restore Test Matrix", "color": {"background": "#4E79A7", "border": "#4E79A7", "highlight": {"background": "#ffffff", "border": "#4E79A7"}}, "size": 23.6, "font": {"size": 12, "color": "#ffffff"}, "title": "Restore Test Matrix", "community": 0, "community_name": "Client-Only Calculations", "source_file": "docs/RESTORE_QA_2026-07-18.md", "file_type": "concept", "degree": 5}, {"id": "docs_restore_qa_2026_07_18_restore_tree_identity", "label": "Restore Tree Identity", "color": {"background": "#E15759", "border": "#E15759", "highlight": {"background": "#ffffff", "border": "#E15759"}}, "size": 12.7, "font": {"size": 0, "color": "#ffffff"}, "title": "Restore Tree Identity", "community": 2, "community_name": "Release and Deployment", "source_file": "docs/RESTORE_QA_2026-07-18.md", "file_type": "rationale", "degree": 1}, {"id": "docs_restore_qa_2026_07_18_manual_browser_smoke_gap", "label": "Manual Browser Smoke Gap", "color": {"background": "#E15759", "border": "#E15759", "highlight": {"background": "#ffffff", "border": "#E15759"}}, "size": 12.7, "font": {"size": 0, "color": "#ffffff"}, "title": "Manual Browser Smoke Gap", "community": 2, "community_name": "Release and Deployment", "source_file": "docs/RESTORE_QA_2026-07-18.md", "file_type": "rationale", "degree": 1}, {"id": "immobilien_deal_checker_application", "label": "Immobilien Deal Checker Application", "color": {"background": "#4E79A7", "border": "#4E79A7", "highlight": {"background": "#ffffff", "border": "#4E79A7"}}, "size": 40.0, "font": {"size": 12, "color": "#ffffff"}, "title": "Immobilien Deal Checker Application", "community": 0, "community_name": "Client-Only Calculations", "source_file": "immobilien-deal-checker.html", "file_type": "code", "degree": 11}, {"id": "immobilien_deal_checker_calc", "label": "Deal Calculation Engine", "color": {"background": "#4E79A7", "border": "#4E79A7", "highlight": {"background": "#ffffff", "border": "#4E79A7"}}, "size": 29.1, "font": {"size": 12, "color": "#ffffff"}, "title": "Deal Calculation Engine", "community": 0, "community_name": "Client-Only Calculations", "source_file": "immobilien-deal-checker.html", "file_type": "code", "degree": 7}, {"id": "immobilien_deal_checker_estimate_rent", "label": "Offenbach Rent Estimator", "color": {"background": "#4E79A7", "border": "#4E79A7", "highlight": {"background": "#ffffff", "border": "#4E79A7"}}, "size": 18.2, "font": {"size": 12, "color": "#ffffff"}, "title": "Offenbach Rent Estimator", "community": 0, "community_name": "Client-Only Calculations", "source_file": "immobilien-deal-checker.html", "file_type": "code", "degree": 3}, {"id": "immobilien_deal_checker_evaluation_config", "label": "Evaluation Mode Configuration", "color": {"background": "#4E79A7", "border": "#4E79A7", "highlight": {"background": "#ffffff", "border": "#4E79A7"}}, "size": 12.7, "font": {"size": 0, "color": "#ffffff"}, "title": "Evaluation Mode Configuration", "community": 0, "community_name": "Client-Only Calculations", "source_file": "immobilien-deal-checker.html", "file_type": "code", "degree": 1}, {"id": "immobilien_deal_checker_rent_increase_presets", "label": "Rent Increase Presets", "color": {"background": "#4E79A7", "border": "#4E79A7", "highlight": {"background": "#ffffff", "border": "#4E79A7"}}, "size": 12.7, "font": {"size": 0, "color": "#ffffff"}, "title": "Rent Increase Presets", "community": 0, "community_name": "Client-Only Calculations", "source_file": "immobilien-deal-checker.html", "file_type": "code", "degree": 1}, {"id": "immobilien_deal_checker_tax_map", "label": "German Property Transfer Tax Map", "color": {"background": "#4E79A7", "border": "#4E79A7", "highlight": {"background": "#ffffff", "border": "#4E79A7"}}, "size": 12.7, "font": {"size": 0, "color": "#ffffff"}, "title": "German Property Transfer Tax Map", "community": 0, "community_name": "Client-Only Calculations", "source_file": "immobilien-deal-checker.html", "file_type": "code", "degree": 1}, {"id": "immobilien_deal_checker_offenbach_rent_table", "label": "Offenbach Rent Table", "color": {"background": "#4E79A7", "border": "#4E79A7", "highlight": {"background": "#ffffff", "border": "#4E79A7"}}, "size": 12.7, "font": {"size": 0, "color": "#ffffff"}, "title": "Offenbach Rent Table", "community": 0, "community_name": "Client-Only Calculations", "source_file": "immobilien-deal-checker.html", "file_type": "code", "degree": 1}, {"id": "immobilien_deal_checker_deal_scoring_model", "label": "Deal Scoring Model", "color": {"background": "#B07AA1", "border": "#B07AA1", "highlight": {"background": "#ffffff", "border": "#B07AA1"}}, "size": 18.2, "font": {"size": 12, "color": "#ffffff"}, "title": "Deal Scoring Model", "community": 6, "community_name": "Advice Boundary", "source_file": "immobilien-deal-checker.html", "file_type": "rationale", "degree": 3}, {"id": "immobilien_deal_checker_local_financial_processing", "label": "Local Financial Data Processing", "color": {"background": "#4E79A7", "border": "#4E79A7", "highlight": {"background": "#ffffff", "border": "#4E79A7"}}, "size": 12.7, "font": {"size": 0, "color": "#ffffff"}, "title": "Local Financial Data Processing", "community": 0, "community_name": "Client-Only Calculations", "source_file": "immobilien-deal-checker.html", "file_type": "concept", "degree": 1}, {"id": "skills_immobilien_deal_expert_skill_domain_rules", "label": "Immobilien Deal Expert", "color": {"background": "#F28E2B", "border": "#F28E2B", "highlight": {"background": "#ffffff", "border": "#F28E2B"}}, "size": 26.4, "font": {"size": 12, "color": "#ffffff"}, "title": "Immobilien Deal Expert", "community": 1, "community_name": "Governance and Skills", "source_file": "skills/immobilien-deal-expert/SKILL.md", "file_type": "document", "degree": 6}, {"id": "skills_immobilien_deal_expert_skill_model_rules", "label": "Real Estate Model Rules", "color": {"background": "#F28E2B", "border": "#F28E2B", "highlight": {"background": "#ffffff", "border": "#F28E2B"}}, "size": 15.5, "font": {"size": 12, "color": "#ffffff"}, "title": "Real Estate Model Rules", "community": 1, "community_name": "Governance and Skills", "source_file": "skills/immobilien-deal-expert/SKILL.md", "file_type": "rationale", "degree": 2}, {"id": "skills_immobilien_deal_expert_skill_advice_boundary", "label": "No-Advice and No-Guarantee Boundary", "color": {"background": "#B07AA1", "border": "#B07AA1", "highlight": {"background": "#ffffff", "border": "#B07AA1"}}, "size": 18.2, "font": {"size": 12, "color": "#ffffff"}, "title": "No-Advice and No-Guarantee Boundary", "community": 6, "community_name": "Advice Boundary", "source_file": "skills/immobilien-deal-expert/SKILL.md", "file_type": "rationale", "degree": 3}, {"id": "skills_immobilien_deal_expert_skill_official_source_workflow", "label": "Official Source Workflow", "color": {"background": "#F28E2B", "border": "#F28E2B", "highlight": {"background": "#ffffff", "border": "#F28E2B"}}, "size": 12.7, "font": {"size": 0, "color": "#ffffff"}, "title": "Official Source Workflow", "community": 1, "community_name": "Governance and Skills", "source_file": "skills/immobilien-deal-expert/SKILL.md", "file_type": "rationale", "degree": 1}, {"id": "skills_immobilien_deal_expert_agents_openai_openai_interface", "label": "Immobilien Deal Expert OpenAI Interface", "color": {"background": "#F28E2B", "border": "#F28E2B", "highlight": {"background": "#ffffff", "border": "#F28E2B"}}, "size": 12.7, "font": {"size": 0, "color": "#ffffff"}, "title": "Immobilien Deal Expert OpenAI Interface", "community": 1, "community_name": "Governance and Skills", "source_file": "skills/immobilien-deal-expert/agents/openai.yaml", "file_type": "document", "degree": 1}, {"id": "skills_openclaw_design_system_kickoff_skill_design_system_kickoff", "label": "OpenClaw Design System Kickoff", "color": {"background": "#F28E2B", "border": "#F28E2B", "highlight": {"background": "#ffffff", "border": "#F28E2B"}}, "size": 18.2, "font": {"size": 12, "color": "#ffffff"}, "title": "OpenClaw Design System Kickoff", "community": 1, "community_name": "Governance and Skills", "source_file": "skills/openclaw-design-system-kickoff/SKILL.md", "file_type": "document", "degree": 3}, {"id": "skills_openclaw_design_system_kickoff_skill_coherence_over_premium", "label": "Coherence and Usability Over Premium Styling", "color": {"background": "#F28E2B", "border": "#F28E2B", "highlight": {"background": "#ffffff", "border": "#F28E2B"}}, "size": 12.7, "font": {"size": 0, "color": "#ffffff"}, "title": "Coherence and Usability Over Premium Styling", "community": 1, "community_name": "Governance and Skills", "source_file": "skills/openclaw-design-system-kickoff/SKILL.md", "file_type": "rationale", "degree": 1}, {"id": "skills_openclaw_web_premium_ui_skill_premium_ui", "label": "OpenClaw Web Premium UI", "color": {"background": "#F28E2B", "border": "#F28E2B", "highlight": {"background": "#ffffff", "border": "#F28E2B"}}, "size": 23.6, "font": {"size": 12, "color": "#ffffff"}, "title": "OpenClaw Web Premium UI", "community": 1, "community_name": "Governance and Skills", "source_file": "skills/openclaw-web-premium-ui/SKILL.md", "file_type": "document", "degree": 5}, {"id": "skills_openclaw_web_premium_ui_skill_trust_critical_clarity", "label": "Trust-Critical Clarity", "color": {"background": "#76B7B2", "border": "#76B7B2", "highlight": {"background": "#ffffff", "border": "#76B7B2"}}, "size": 18.2, "font": {"size": 12, "color": "#ffffff"}, "title": "Trust-Critical Clarity", "community": 3, "community_name": "Trust-Centered Design", "source_file": "skills/openclaw-web-premium-ui/SKILL.md", "file_type": "rationale", "degree": 3}, {"id": "skills_react_vite_typescript_skill_react_vite_typescript_rules", "label": "React Vite TypeScript Development Rules", "color": {"background": "#F28E2B", "border": "#F28E2B", "highlight": {"background": "#ffffff", "border": "#F28E2B"}}, "size": 18.2, "font": {"size": 12, "color": "#ffffff"}, "title": "React Vite TypeScript Development Rules", "community": 1, "community_name": "Governance and Skills", "source_file": "skills/react-vite-typescript/SKILL.md", "file_type": "document", "degree": 3}, {"id": "skills_web_apple_design_skill_apple_web_design", "label": "Apple Design Language for Web", "color": {"background": "#F28E2B", "border": "#F28E2B", "highlight": {"background": "#ffffff", "border": "#F28E2B"}}, "size": 18.2, "font": {"size": 12, "color": "#ffffff"}, "title": "Apple Design Language for Web", "community": 1, "community_name": "Governance and Skills", "source_file": "skills/web-apple-design/SKILL.md", "file_type": "document", "degree": 3}, {"id": "skills_web_apple_design_skill_accessible_restraint", "label": "Accessible Visual Restraint", "color": {"background": "#76B7B2", "border": "#76B7B2", "highlight": {"background": "#ffffff", "border": "#76B7B2"}}, "size": 15.5, "font": {"size": 12, "color": "#ffffff"}, "title": "Accessible Visual Restraint", "community": 3, "community_name": "Trust-Centered Design", "source_file": "skills/web-apple-design/SKILL.md", "file_type": "rationale", "degree": 2}];
+const RAW_EDGES = [{"from": "githooks_pre_commit", "to": "githooks_pre_commit__entry", "label": "contains", "title": "contains [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "githooks_pre_push", "to": "githooks_pre_push__entry", "label": "contains", "title": "contains [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "agents_project_governance", "to": "agents_client_only_architecture", "label": "implements", "title": "implements [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "agents_project_governance", "to": "agents_single_file_principle", "label": "implements", "title": "implements [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "agents_project_governance", "to": "agents_versioning_contract", "label": "implements", "title": "implements [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "agents_project_governance", "to": "changelog_release_history", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "agents_project_governance", "to": "immobilien_deal_checker_application", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "agents_project_governance", "to": "skills_immobilien_deal_expert_skill_domain_rules", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "agents_project_governance", "to": "skills_openclaw_design_system_kickoff_skill_design_system_kickoff", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "agents_project_governance", "to": "skills_openclaw_web_premium_ui_skill_premium_ui", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "agents_project_governance", "to": "skills_react_vite_typescript_skill_react_vite_typescript_rules", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "agents_project_governance", "to": "skills_web_apple_design_skill_apple_web_design", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "agents_project_governance", "to": "claude_project_governance", "label": "semantically_similar_to", "title": "semantically_similar_to [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "agents_client_only_architecture", "to": "claude_project_governance", "label": "implements", "title": "implements [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "agents_client_only_architecture", "to": "docs_restore_qa_2026_07_18_restore_test_matrix", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "agents_single_file_principle", "to": "claude_project_governance", "label": "implements", "title": "implements [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "agents_single_file_principle", "to": "fallback_single_file_recovery", "label": "rationale_for", "title": "rationale_for [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "agents_single_file_principle", "to": "immobilien_deal_checker_application", "label": "implements", "title": "implements [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "agents_versioning_contract", "to": "claude_project_governance", "label": "implements", "title": "implements [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "changelog_release_history", "to": "changelog_keep_a_changelog", "label": "cites", "title": "cites [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "changelog_release_history", "to": "changelog_restore_release", "label": "implements", "title": "implements [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "changelog_release_history", "to": "changelog_semantic_versioning", "label": "cites", "title": "cites [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "changelog_release_history", "to": "deployment_deployment_plan", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "changelog_release_history", "to": "readme_project_overview", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "changelog_semantic_versioning", "to": "readme_project_overview", "label": "conceptually_related_to", "title": "conceptually_related_to [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "changelog_restore_release", "to": "docs_restore_qa_2026_07_18_restore_qa_report", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "changelog_restore_release", "to": "product_product_brief", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "claude_project_governance", "to": "skills_immobilien_deal_expert_skill_domain_rules", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "deployment_deployment_plan", "to": "deployment_static_hosting_options", "label": "implements", "title": "implements [AMBIGUOUS]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "AMBIGUOUS"}, {"from": "deployment_deployment_plan", "to": "immobilien_deal_checker_application", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "design_visual_direction", "to": "design_analysis_tool_thesis", "label": "implements", "title": "implements [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "design_visual_direction", "to": "design_clarity_over_animation", "label": "implements", "title": "implements [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "design_visual_direction", "to": "docs_premium_roadmap_monetization_roadmap", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "design_visual_direction", "to": "immobilien_deal_checker_application", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "design_visual_direction", "to": "readme_project_overview", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "design_analysis_tool_thesis", "to": "product_success_criteria", "label": "rationale_for", "title": "rationale_for [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "design_analysis_tool_thesis", "to": "immobilien_deal_checker_deal_scoring_model", "label": "conceptually_related_to", "title": "conceptually_related_to [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "design_analysis_tool_thesis", "to": "skills_openclaw_web_premium_ui_skill_trust_critical_clarity", "label": "semantically_similar_to", "title": "semantically_similar_to [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "design_clarity_over_animation", "to": "skills_openclaw_web_premium_ui_skill_trust_critical_clarity", "label": "semantically_similar_to", "title": "semantically_similar_to [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "design_clarity_over_animation", "to": "skills_web_apple_design_skill_accessible_restraint", "label": "semantically_similar_to", "title": "semantically_similar_to [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "fallback_recovery_plan", "to": "fallback_single_file_recovery", "label": "implements", "title": "implements [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "fallback_recovery_plan", "to": "immobilien_deal_checker_application", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "product_product_brief", "to": "docs_premium_roadmap_premium_feature_set", "label": "conceptually_related_to", "title": "conceptually_related_to [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "product_product_brief", "to": "product_advice_boundary", "label": "implements", "title": "implements [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "product_product_brief", "to": "product_success_criteria", "label": "implements", "title": "implements [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "product_advice_boundary", "to": "skills_immobilien_deal_expert_skill_advice_boundary", "label": "semantically_similar_to", "title": "semantically_similar_to [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "readme_project_overview", "to": "docs_premium_roadmap_monetization_roadmap", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "readme_project_overview", "to": "docs_restore_qa_2026_07_18_restore_qa_report", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "readme_project_overview", "to": "immobilien_deal_checker_application", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "docs_premium_roadmap_monetization_roadmap", "to": "docs_premium_roadmap_freemium_subscription", "label": "implements", "title": "implements [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "docs_premium_roadmap_monetization_roadmap", "to": "docs_premium_roadmap_premium_feature_set", "label": "implements", "title": "implements [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "docs_premium_roadmap_freemium_subscription", "to": "docs_premium_roadmap_subscription_rationale", "label": "rationale_for", "title": "rationale_for [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "docs_restore_qa_2026_07_18_restore_qa_report", "to": "docs_restore_qa_2026_07_18_manual_browser_smoke_gap", "label": "implements", "title": "implements [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "docs_restore_qa_2026_07_18_restore_qa_report", "to": "docs_restore_qa_2026_07_18_restore_test_matrix", "label": "implements", "title": "implements [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "docs_restore_qa_2026_07_18_restore_qa_report", "to": "docs_restore_qa_2026_07_18_restore_tree_identity", "label": "implements", "title": "implements [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "docs_restore_qa_2026_07_18_restore_test_matrix", "to": "immobilien_deal_checker_application", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "docs_restore_qa_2026_07_18_restore_test_matrix", "to": "immobilien_deal_checker_calc", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "docs_restore_qa_2026_07_18_restore_test_matrix", "to": "immobilien_deal_checker_estimate_rent", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "immobilien_deal_checker_application", "to": "immobilien_deal_checker_calc", "label": "implements", "title": "implements [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "immobilien_deal_checker_application", "to": "immobilien_deal_checker_estimate_rent", "label": "implements", "title": "implements [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "immobilien_deal_checker_application", "to": "immobilien_deal_checker_local_financial_processing", "label": "implements", "title": "implements [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "immobilien_deal_checker_application", "to": "skills_react_vite_typescript_skill_react_vite_typescript_rules", "label": "conceptually_related_to", "title": "conceptually_related_to [AMBIGUOUS]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "AMBIGUOUS"}, {"from": "immobilien_deal_checker_calc", "to": "immobilien_deal_checker_deal_scoring_model", "label": "implements", "title": "implements [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "immobilien_deal_checker_calc", "to": "immobilien_deal_checker_evaluation_config", "label": "calls", "title": "calls [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "immobilien_deal_checker_calc", "to": "immobilien_deal_checker_tax_map", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "immobilien_deal_checker_calc", "to": "immobilien_deal_checker_rent_increase_presets", "label": "calls", "title": "calls [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "immobilien_deal_checker_calc", "to": "skills_immobilien_deal_expert_skill_model_rules", "label": "conceptually_related_to", "title": "conceptually_related_to [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "immobilien_deal_checker_estimate_rent", "to": "immobilien_deal_checker_offenbach_rent_table", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "immobilien_deal_checker_deal_scoring_model", "to": "skills_immobilien_deal_expert_skill_advice_boundary", "label": "rationale_for", "title": "rationale_for [INFERRED]", "dashes": true, "width": 1, "color": {"opacity": 0.35}, "confidence": "INFERRED"}, {"from": "skills_immobilien_deal_expert_skill_domain_rules", "to": "skills_immobilien_deal_expert_agents_openai_openai_interface", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "skills_immobilien_deal_expert_skill_domain_rules", "to": "skills_immobilien_deal_expert_skill_advice_boundary", "label": "implements", "title": "implements [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "skills_immobilien_deal_expert_skill_domain_rules", "to": "skills_immobilien_deal_expert_skill_model_rules", "label": "implements", "title": "implements [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "skills_immobilien_deal_expert_skill_domain_rules", "to": "skills_immobilien_deal_expert_skill_official_source_workflow", "label": "implements", "title": "implements [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "skills_openclaw_design_system_kickoff_skill_design_system_kickoff", "to": "skills_openclaw_design_system_kickoff_skill_coherence_over_premium", "label": "implements", "title": "implements [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "skills_openclaw_design_system_kickoff_skill_design_system_kickoff", "to": "skills_openclaw_web_premium_ui_skill_premium_ui", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "skills_openclaw_web_premium_ui_skill_premium_ui", "to": "skills_openclaw_web_premium_ui_skill_trust_critical_clarity", "label": "implements", "title": "implements [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "skills_openclaw_web_premium_ui_skill_premium_ui", "to": "skills_react_vite_typescript_skill_react_vite_typescript_rules", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "skills_openclaw_web_premium_ui_skill_premium_ui", "to": "skills_web_apple_design_skill_apple_web_design", "label": "references", "title": "references [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}, {"from": "skills_web_apple_design_skill_apple_web_design", "to": "skills_web_apple_design_skill_accessible_restraint", "label": "implements", "title": "implements [EXTRACTED]", "dashes": false, "width": 2, "color": {"opacity": 0.7}, "confidence": "EXTRACTED"}];
+const LEGEND = [{"cid": 0, "color": "#4E79A7", "label": "Client-Only Calculations", "count": 13}, {"cid": 1, "color": "#F28E2B", "label": "Governance and Skills", "count": 12}, {"cid": 2, "color": "#E15759", "label": "Release and Deployment", "count": 9}, {"cid": 3, "color": "#76B7B2", "label": "Trust-Centered Design", "count": 5}, {"cid": 4, "color": "#59A14F", "label": "Premium Roadmap", "count": 4}, {"cid": 5, "color": "#EDC948", "label": "Product Release Scope", "count": 3}, {"cid": 6, "color": "#B07AA1", "label": "Advice Boundary", "count": 3}, {"cid": 7, "color": "#FF9DA7", "label": "Pre-Commit Hook", "count": 2}, {"cid": 8, "color": "#9C755F", "label": "Pre-Push Hook", "count": 2}];
+
+// HTML-escape helper — prevents XSS when injecting graph data into innerHTML
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// Build vis datasets
+const nodesDS = new vis.DataSet(RAW_NODES.map(n => ({
+  id: n.id, label: n.label, color: n.color, size: n.size,
+  font: n.font, title: n.title,
+  _community: n.community, _community_name: n.community_name,
+  _source_file: n.source_file, _file_type: n.file_type, _degree: n.degree,
+})));
+
+const edgesDS = new vis.DataSet(RAW_EDGES.map((e, i) => ({
+  id: i, from: e.from, to: e.to,
+  label: '',
+  title: e.title,
+  dashes: e.dashes,
+  width: e.width,
+  color: e.color,
+  arrows: { to: { enabled: true, scaleFactor: 0.5 } },
+})));
+
+const container = document.getElementById('graph');
+const network = new vis.Network(container, { nodes: nodesDS, edges: edgesDS }, {
+  physics: {
+    enabled: true,
+    solver: 'forceAtlas2Based',
+    forceAtlas2Based: {
+      gravitationalConstant: -60,
+      centralGravity: 0.005,
+      springLength: 120,
+      springConstant: 0.08,
+      damping: 0.4,
+      avoidOverlap: 0.8,
+    },
+    stabilization: { iterations: 200, fit: true },
+  },
+  interaction: {
+    hover: true,
+    tooltipDelay: 100,
+    hideEdgesOnDrag: true,
+    navigationButtons: false,
+    keyboard: false,
+  },
+  nodes: { shape: 'dot', borderWidth: 1.5 },
+  edges: { smooth: { type: 'continuous', roundness: 0.2 }, selectionWidth: 3 },
+});
+
+network.once('stabilizationIterationsDone', () => {
+  network.setOptions({ physics: { enabled: false } });
+});
+
+function showInfo(nodeId) {
+  const n = nodesDS.get(nodeId);
+  if (!n) return;
+  const neighborIds = network.getConnectedNodes(nodeId);
+  const neighborItems = neighborIds.map(nid => {
+    const nb = nodesDS.get(nid);
+    const color = nb ? nb.color.background : '#555';
+    return `<span class="neighbor-link" style="border-left-color:${esc(color)}" onclick="focusNode(${JSON.stringify(nid)})">${esc(nb ? nb.label : nid)}</span>`;
+  }).join('');
+  document.getElementById('info-content').innerHTML = `
+    <div class="field"><b>${esc(n.label)}</b></div>
+    <div class="field">Type: ${esc(n._file_type || 'unknown')}</div>
+    <div class="field">Community: ${esc(n._community_name)}</div>
+    <div class="field">Source: ${esc(n._source_file || '-')}</div>
+    <div class="field">Degree: ${n._degree}</div>
+    ${neighborIds.length ? `<div class="field" style="margin-top:8px;color:#aaa;font-size:11px">Neighbors (${neighborIds.length})</div><div id="neighbors-list">${neighborItems}</div>` : ''}
+  `;
+}
+
+function focusNode(nodeId) {
+  network.focus(nodeId, { scale: 1.4, animation: true });
+  network.selectNodes([nodeId]);
+  showInfo(nodeId);
+}
+
+// Track hovered node — hover detection is more reliable than click params
+let hoveredNodeId = null;
+network.on('hoverNode', params => {
+  hoveredNodeId = params.node;
+  container.style.cursor = 'pointer';
+});
+network.on('blurNode', () => {
+  hoveredNodeId = null;
+  container.style.cursor = 'default';
+});
+container.addEventListener('click', () => {
+  if (hoveredNodeId !== null) {
+    showInfo(hoveredNodeId);
+    network.selectNodes([hoveredNodeId]);
+  }
+});
+network.on('click', params => {
+  if (params.nodes.length > 0) {
+    showInfo(params.nodes[0]);
+  } else if (hoveredNodeId === null) {
+    document.getElementById('info-content').innerHTML = '<span class="empty">Click a node to inspect it</span>';
+  }
+});
+
+const searchInput = document.getElementById('search');
+const searchResults = document.getElementById('search-results');
+searchInput.addEventListener('input', () => {
+  const q = searchInput.value.toLowerCase().trim();
+  searchResults.innerHTML = '';
+  if (!q) { searchResults.style.display = 'none'; return; }
+  const matches = RAW_NODES.filter(n => n.label.toLowerCase().includes(q)).slice(0, 20);
+  if (!matches.length) { searchResults.style.display = 'none'; return; }
+  searchResults.style.display = 'block';
+  matches.forEach(n => {
+    const el = document.createElement('div');
+    el.className = 'search-item';
+    el.textContent = n.label;
+    el.style.borderLeft = `3px solid ${n.color.background}`;
+    el.style.paddingLeft = '8px';
+    el.onclick = () => {
+      network.focus(n.id, { scale: 1.5, animation: true });
+      network.selectNodes([n.id]);
+      showInfo(n.id);
+      searchResults.style.display = 'none';
+      searchInput.value = '';
+    };
+    searchResults.appendChild(el);
+  });
+});
+document.addEventListener('click', e => {
+  if (!searchResults.contains(e.target) && e.target !== searchInput)
+    searchResults.style.display = 'none';
+});
+
+const hiddenCommunities = new Set();
+
+const selectAllCb = document.getElementById('select-all-cb');
+
+function updateSelectAllState() {
+  const total = LEGEND.length;
+  const hidden = hiddenCommunities.size;
+  selectAllCb.checked = hidden === 0;
+  selectAllCb.indeterminate = hidden > 0 && hidden < total;
+}
+
+function toggleAllCommunities(hide) {
+  document.querySelectorAll('.legend-item').forEach(item => {
+    hide ? item.classList.add('dimmed') : item.classList.remove('dimmed');
+  });
+  document.querySelectorAll('.legend-cb').forEach(cb => {
+    cb.checked = !hide;
+  });
+  LEGEND.forEach(c => {
+    if (hide) hiddenCommunities.add(c.cid); else hiddenCommunities.delete(c.cid);
+  });
+  const updates = RAW_NODES.map(n => ({ id: n.id, hidden: hide }));
+  nodesDS.update(updates);
+  updateSelectAllState();
+}
+
+const legendEl = document.getElementById('legend');
+LEGEND.forEach(c => {
+  const item = document.createElement('div');
+  item.className = 'legend-item';
+  const cb = document.createElement('input');
+  cb.type = 'checkbox';
+  cb.className = 'legend-cb';
+  cb.checked = true;
+  cb.addEventListener('change', (e) => {
+    e.stopPropagation();
+    if (cb.checked) {
+      hiddenCommunities.delete(c.cid);
+      item.classList.remove('dimmed');
+    } else {
+      hiddenCommunities.add(c.cid);
+      item.classList.add('dimmed');
+    }
+    const updates = RAW_NODES
+      .filter(n => n.community === c.cid)
+      .map(n => ({ id: n.id, hidden: !cb.checked }));
+    nodesDS.update(updates);
+    updateSelectAllState();
+  });
+  item.innerHTML = `<div class="legend-dot" style="background:${c.color}"></div>
+    <span class="legend-label">${c.label}</span>
+    <span class="legend-count">${c.count}</span>`;
+  item.prepend(cb);
+  item.onclick = (e) => {
+    if (e.target === cb) return;
+    cb.checked = !cb.checked;
+    cb.dispatchEvent(new Event('change'));
+  };
+  legendEl.appendChild(item);
+});
+</script>
+<script>
+// Render hyperedges as shaded regions
+const hyperedges = [{"id": "core_product_identity", "label": "Core Product Identity", "nodes": ["readme_project_overview", "product_product_brief", "immobilien_deal_checker_application"], "relation": "form", "confidence": "INFERRED", "confidence_score": 0.95, "source_file": "README.md"}, {"id": "trust_centered_design_guidance", "label": "Trust-Centered Design Guidance", "nodes": ["design_visual_direction", "skills_openclaw_web_premium_ui_skill_premium_ui", "skills_web_apple_design_skill_apple_web_design"], "relation": "participate_in", "confidence": "INFERRED", "confidence_score": 0.85, "source_file": "DESIGN.md"}, {"id": "financial_model_governance", "label": "Financial Model Governance", "nodes": ["agents_project_governance", "skills_immobilien_deal_expert_skill_domain_rules", "immobilien_deal_checker_calc"], "relation": "implement", "confidence": "INFERRED", "confidence_score": 0.95, "source_file": "AGENTS.md"}];
+// afterDrawing passes ctx already transformed to network coordinate space.
+// Draw node positions raw — no manual pan/zoom/DPR math needed.
+network.on('afterDrawing', function(ctx) {
+    hyperedges.forEach(h => {
+        const positions = h.nodes
+            .map(nid => network.getPositions([nid])[nid])
+            .filter(p => p !== undefined);
+        if (positions.length < 2) return;
+        ctx.save();
+        ctx.globalAlpha = 0.12;
+        ctx.fillStyle = '#6366f1';
+        ctx.strokeStyle = '#6366f1';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        // Centroid and expanded hull in network coordinates
+        const cx = positions.reduce((s, p) => s + p.x, 0) / positions.length;
+        const cy = positions.reduce((s, p) => s + p.y, 0) / positions.length;
+        const expanded = positions.map(p => ({
+            x: cx + (p.x - cx) * 1.15,
+            y: cy + (p.y - cy) * 1.15
+        }));
+        ctx.moveTo(expanded[0].x, expanded[0].y);
+        expanded.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
+        ctx.closePath();
+        ctx.fill();
+        ctx.globalAlpha = 0.4;
+        ctx.stroke();
+        // Label
+        ctx.globalAlpha = 0.8;
+        ctx.fillStyle = '#4f46e5';
+        ctx.font = 'bold 11px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(h.label, cx, cy - 5);
+        ctx.restore();
+    });
+});
+</script>
+</body>
+</html>
