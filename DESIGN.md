@@ -1,7 +1,7 @@
-# DESIGN.md — Immobilien Deal Checker
+# DESIGN.md - Immobilien Deal Checker
 
 ## Zweck
-Dieses Dokument beschreibt die visuelle Richtung des Immobilien Deal Checkers, damit das Produkt schnell, ehrlich und nützlich bleibt — ohne unnötige Tool-Spielerei oder optische Überladung.
+Dieses Dokument beschreibt die visuelle Richtung des Immobilien Deal Checkers, damit das Produkt schnell, ehrlich und nuetzlich bleibt - ohne unnoetige Tool-Spielerei oder optische Ueberladung.
 
 Abgeleitet aus:
 - `README.md`
@@ -17,6 +17,8 @@ Die Kernwirkung soll sein:
 - glaubwürdig
 - pragmatisch
 - fokussiert auf Nutzen statt Show
+
+Der aktuelle Scope bleibt eine Single-File-Web-App ohne Server, Nutzerkonto oder Datenspeicherung.
 
 ## Zielbild
 **Souveränes Analyse-Tool statt hübscher Immobilien-Marketing-Skin.**
@@ -73,12 +75,14 @@ Aber: dichte UI ist nicht gleich chaotische UI.
 - klare Abschnittsüberschriften
 - Eingaben sachlich und robust
 - Hilfetexte klein, aber gut lesbar
+- konservative Default-Annahmen sichtbar und aenderbar halten
 
 ### Ergebnisse
 - Deal-Score prominent
 - KPI-Blöcke einheitlich
 - Bewertung logisch von oben nach unten lesbar
 - Analyse und Tabelle nicht gegeneinander konkurrieren lassen
+- Ergebnistext bleibt orientierend und darf keinen Kauf-/Nichtkauf-Befehl suggerieren
 
 ### Statusfarben
 - Grün = gut
@@ -123,3 +127,4 @@ Regel: Dieses Produkt gewinnt mehr durch Klarheit als durch Animation.
 - Score-/Meter-Bereich noch klarer priorisieren
 - mobile Eingabe-UX weiter verbessern
 - ggf. später leichte visuelle Veredelung ohne Verlust an Tool-Klarheit
+- Advice-Boundary in Score-, Risiko- und Premium-Texten dauerhaft mitdenken

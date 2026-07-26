@@ -7,6 +7,8 @@ Versionierung: [Semantic Versioning](https://semver.org/lang/de/)
 
 ## [Unreleased]
 
+- Design-Compass auf den aktuellen Single-File-Scope, konservative Annahmen und Advice-Boundary der Deal-Einordnung nachgezogen.
+
 ## [0.11.1] - 2026-07-18
 
 - Projektstand nach dem versehentlichen OpenClaw-Rollback wiederhergestellt und gegen den Referenz-Commit vor dem Rollback baumidentisch validiert.
