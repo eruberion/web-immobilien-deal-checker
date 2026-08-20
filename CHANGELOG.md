@@ -8,6 +8,8 @@ Versionierung: [Semantic Versioning](https://semver.org/lang/de/)
 ## [Unreleased]
 
 - Design-Compass auf den aktuellen Single-File-Scope, konservative Annahmen und Advice-Boundary der Deal-Einordnung nachgezogen.
+- `DESIGN.md` zum umsetzungsnahen Design-System V2 vervollstaendigt: reale Single-File-Tokens, Breakpoints, Formular-/Score-/KPI-Zustaende, bekannte Accessibility-Luecken, No-Gos und Agenten-QA sind jetzt pruefbar dokumentiert. Berechnungslogik, Runtime und Version bleiben unveraendert.
+- Adversarial-/Self-Eval-Review gegen das ausgelieferte Single-File-HTML: aktuelle Validierungs-, Tooltip-, Fokus-, Motion- und Live-Region-Grenzen werden nicht schoengeschrieben, sondern als konkrete QA- beziehungsweise Folgearbeitsluecken ausgewiesen.
 
 ## [0.11.1] - 2026-07-18
 
