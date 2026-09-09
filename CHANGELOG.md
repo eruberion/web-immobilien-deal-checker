@@ -20,6 +20,13 @@ Versionierung: [Semantic Versioning](https://semver.org/lang/de/)
 - `DESIGN.md reviewed: unchanged-with-reason` — ausschließlich die bestehende
   Versionsanzeige wurde aktualisiert; Layout und Komponenten blieben
   unverändert und wurden auf 1440, 768 und 375 px geprüft.
+- README und Agentenregeln auf den nicht freigegebenen historischen
+  Monetarisierungsstand sowie den aktuellen Workspace-/Web-Doku-Sync
+  korrigiert; archivierte ZZZ-HTML-/Project-Hub-Ziele sind entfernt.
+- Projekt-Hook-Proxys fuer RepoGuard-Worktrees gehaertet. Adversarial-Verify
+  und Self-Eval-Bias-Check bestaetigen, dass weder Berechnungslogik noch
+  Advice-Boundary oder Nutzeroberflaeche veraendert wurden und die zentralen
+  Push-Gates aktiv bleiben.
 
 - Design-Compass auf den aktuellen Single-File-Scope, konservative Annahmen und Advice-Boundary der Deal-Einordnung nachgezogen.
 - `DESIGN.md` zum umsetzungsnahen Design-System V2 vervollstaendigt: reale Single-File-Tokens, Breakpoints, Formular-/Score-/KPI-Zustaende, bekannte Accessibility-Luecken, No-Gos und Agenten-QA sind jetzt pruefbar dokumentiert. Berechnungslogik, Runtime und Version bleiben unveraendert.
