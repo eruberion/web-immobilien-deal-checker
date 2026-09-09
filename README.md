@@ -13,7 +13,7 @@ Kleines Single-File-Webprojekt zur schnellen Plausibilitaetspruefung von Immobil
 ## Versionierung
 
 - SemVer fuer Releases: `MAJOR.MINOR.PATCH`
-- Aktuelle Release-Version: `0.11.1`
+- Aktuelle Release-Version: `0.11.2`
 - Source of Truth: `VERSION`; `immobilien-deal-checker.html` spiegelt denselben Wert via `<meta name="app-version" ...>` und sichtbarer Versionsanzeige.
 - Die fruehere Dateinamens-Baseline `v11` ist im Changelog der SemVer-Version `0.11.0` zugeordnet; historische Einzeldateien sind nicht Bestandteil dieses Repositories.
 
