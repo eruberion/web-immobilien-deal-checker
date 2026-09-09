@@ -7,6 +7,27 @@ Versionierung: [Semantic Versioning](https://semver.org/lang/de/)
 
 ## [Unreleased]
 
+## [0.11.2] - 2026-09-09
+
+- Deployment- und Fallback-Dokumentation auf den tatsächlichen lokalen,
+  noch nicht öffentlich deployten Stand gebracht; unbelegte TBD- und
+  Sofort-Failover-Behauptungen entfernt.
+- Premium-Roadmap eindeutig als historische, nicht freigegebene Hypothese
+  gekennzeichnet. Preise, Paywall und Abomodell bleiben bis zu einer neuen
+  Markt-, Produkt-, Datenschutz- und Advice-Boundary-Prüfung offen.
+- Versionsquelle, README, HTML-Meta und sichtbare Versionsanzeige auf `0.11.2`
+  synchronisiert; Berechnungslogik und Nutzerdatenfluss bleiben unverändert.
+- `DESIGN.md reviewed: unchanged-with-reason` — ausschließlich die bestehende
+  Versionsanzeige wurde aktualisiert; Layout und Komponenten blieben
+  unverändert und wurden auf 1440, 768 und 375 px geprüft.
+- README und Agentenregeln auf den nicht freigegebenen historischen
+  Monetarisierungsstand sowie den aktuellen Workspace-/Web-Doku-Sync
+  korrigiert; archivierte ZZZ-HTML-/Project-Hub-Ziele sind entfernt.
+- Projekt-Hook-Proxys fuer RepoGuard-Worktrees gehaertet. Adversarial-Verify
+  und Self-Eval-Bias-Check bestaetigen, dass weder Berechnungslogik noch
+  Advice-Boundary oder Nutzeroberflaeche veraendert wurden und die zentralen
+  Push-Gates aktiv bleiben.
+
 - Design-Compass auf den aktuellen Single-File-Scope, konservative Annahmen und Advice-Boundary der Deal-Einordnung nachgezogen.
 - `DESIGN.md` zum umsetzungsnahen Design-System V2 vervollstaendigt: reale Single-File-Tokens, Breakpoints, Formular-/Score-/KPI-Zustaende, bekannte Accessibility-Luecken, No-Gos und Agenten-QA sind jetzt pruefbar dokumentiert. Berechnungslogik, Runtime und Version bleiben unveraendert.
 - Adversarial-/Self-Eval-Review gegen das ausgelieferte Single-File-HTML: aktuelle Validierungs-, Tooltip-, Fokus-, Motion- und Live-Region-Grenzen werden nicht schoengeschrieben, sondern als konkrete QA- beziehungsweise Folgearbeitsluecken ausgewiesen.

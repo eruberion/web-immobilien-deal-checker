@@ -6,8 +6,9 @@ Dieses Projekt wird von OpenClaw gesteuert.
 - Governance: light (kein Fastlane, kein UI-Review-Simulator)
 - Skills: `react-vite-typescript`, `web-apple-design`, `openclaw-web-premium-ui`, `openclaw-design-system-kickoff`, `immobilien-deal-expert`
 - `skills/` in diesem Repo ist ein synchronisierter Spiegel aus `Apps/ZZZ_OpenClaw/skills-source/` und wird nicht manuell gepflegt
-- Overlay: `Apps/ZZZ_OpenClaw/prompts/projects/immobilien-deal-checker.md`
-- Zentrale Projektübersicht: `Apps/ZZZ_OpenClaw/docs/project-hub.html` und `Apps/ZZZ_OpenClaw/docs/project-hub.txt`
+- Overlay: `Apps/ZZZ_OpenClaw/prompts/projects/web-immobilien-deal-checker.md`
+- Die frueheren eingebetteten ZZZ-HTML-/Project-Hub-Seiten sind archiviert und
+  duerfen nicht als aktive Doku-Ziele wieder eingefuehrt werden.
 
 ## Projekt-Überblick
 
@@ -36,11 +37,14 @@ Kein Build-Step notwendig — Datei direkt im Browser öffnen.
 
 ## Dokumentations-Pflicht
 
-Bei **jeder Änderung** müssen aktualisiert werden:
+Bei **jeder relevanten Änderung** muessen aktualisiert oder geprueft werden:
 
 1. **`CHANGELOG.md`** – lokaler Kurz-Eintrag unter `Unreleased` bzw. neuer Release-Block
-2. **`Apps/ZZZ_OpenClaw/docs/docs-immobilien-deal-checker.html`** – Changelog-Eintrag oben, Stand-Datum im Header
-3. **`Apps/ZZZ_OpenClaw/docs/project-hub.html`** und **`Apps/ZZZ_OpenClaw/docs/project-hub.txt`** – Version oder Status in der Immobilien-Deal-Checker-Uebersicht aktualisieren
+2. **Projektquellen** – `README.md`, `PRODUCT.md`, `DESIGN.md`,
+   `DEPLOYMENT.md` und `FALLBACK.md` passend zum fachlichen Aenderungsumfang
+3. **Zentrale Quellen** – bei Status-, Versions-, Betriebs- oder
+   Architekturaenderungen die kanonische Doku in `finn-workspace` aktualisieren
+   und ueber den bestehenden Doku-Sync nach `web-doku` spiegeln
 
 ## Wichtige Regeln
 
